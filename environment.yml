@@ -1,0 +1,9 @@
+name: attotree
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - mash
+  - quicktree
+
