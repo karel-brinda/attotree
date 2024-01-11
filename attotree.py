@@ -1,20 +1,15 @@
 #! /usr/bin/env python3
 
 import argparse
-import collections
 import datetime
 import os
-import re
 import subprocess
 import sys
-import tempfile
 import time
 
-from pathlib import Path
-from xopen import xopen
-from pprint import pprint
-
-log_file = None
+DEFAULT_S = 10000
+DEFAULT_K = 21
+DEFAULT_T = os.cpu_count()
 
 
 def error(*msg, error_code=1):
@@ -169,8 +164,8 @@ def convert_to_phylip(triangle_fn, phylip, rescale=False):
     pass
 
 
-def mash_triangle(inp_fns, phylip_fn):
-    cmd = "mash triangle -s 10000 -p 7".split() + inp_fns
+def mash_triangle(inp_fns, phylip_fn, k, s, threads):
+    cmd = f"mash triangle -s {s} -k {k} -p {threads}".split() + inp_fns
     run_safe(cmd, output_fn=phylip_fn)
 
 
@@ -213,6 +208,36 @@ def attotree(fns):
 def main():
 
     parser = argparse.ArgumentParser(description="")
+
+    parser.add_argument(
+        '-k',
+        '--kmer-lenght',
+        type=int,
+        metavar='INT',
+        dest='k',
+        default=DEFAULT_S,
+        help=f'kmer size [{DEFAULT_K}]',
+    )
+
+    parser.add_argument(
+        '-s',
+        '--sketch-size',
+        type=int,
+        metavar='INT',
+        dest='s',
+        default=DEFAULT_S,
+        help=f'sketch size [{DEFAULT_S}]',
+    )
+
+    parser.add_argument(
+        '-t',
+        '--threads',
+        type=int,
+        metavar='INT',
+        dest='s',
+        default=DEFAULT_T,
+        help=f'sketch size [{DEFAULT_S}]',
+    )
 
     parser.add_argument(
         'inp_fa',
