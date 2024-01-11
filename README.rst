@@ -12,18 +12,19 @@ Rapid estimation of phylogenetic tree direclty from FASTA files in the style of
 Dependencies
 ------------
 
-* `Mash <https://github.com/marbl/Mash>`_ (installation: `conda install mash`)
-* `QuickTree <https://github.com/khowe/quicktree>`_ (installation: `conda install quicktree`)
+* `Mash <https://github.com/marbl/Mash>`_ (installation: ``conda install -c bioconda mash``)
+* `QuickTree <https://github.com/khowe/quicktree>`_ (installation: ``conda install -c bioconda quicktree``)
 
 
 Quick example
 -------------
 
-```bash
-git clone https://github.com/karel-brinda/attotree
-cd attotree
-./attotree/attotree.py tests/*.fa
-```
+.. code-block:: bash
+
+    git clone https://github.com/karel-brinda/attotree
+    cd attotree
+    ./attotree/attotree.py tests/*.fa
+
 
 Issues
 ------
