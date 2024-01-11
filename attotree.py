@@ -4,7 +4,6 @@ import argparse
 import collections
 import datetime
 import os
-import psutil
 import re
 import subprocess
 import sys
@@ -14,8 +13,6 @@ import time
 from pathlib import Path
 from xopen import xopen
 from pprint import pprint
-
-
 
 log_file = None
 
@@ -47,6 +44,7 @@ def message(*msg, subprogram='', upper=False):
         msg = map(str.upper, msg)
 
     log_line = '[attotree{}] {} {}'.format(subprogram, fdt, " ".join(msg))
+    print(log_line, file=sys.stderr)
 
     #if not only_log:
     #    print(log_line, file=sys.stderr)
@@ -56,8 +54,12 @@ def message(*msg, subprogram='', upper=False):
     #    log_file.flush()
 
 
-
-def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True, silent=False):
+def run_safe(command,
+             output_fn=None,
+             output_fo=None,
+             err_msg=None,
+             thr_exc=True,
+             silent=False):
     """Run a shell command safely.
 
     Args:
@@ -95,38 +97,30 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
         out_fo = open(output_fn, "w+")
 
     if out_fo == sys.stdout:
-        p = subprocess.Popen("/bin/bash -e -o pipefail -c '{}'".format(command_str), shell=True)
+        p = subprocess.Popen(
+            "/bin/bash -e -o pipefail -c '{}'".format(command_str), shell=True)
     else:
-        p = subprocess.Popen("/bin/bash -e -o pipefail -c '{}'".format(command_str), shell=True, stdout=out_fo)
+        p = subprocess.Popen(
+            "/bin/bash -e -o pipefail -c '{}'".format(command_str),
+            shell=True,
+            stdout=out_fo)
 
-    ps_p = psutil.Process(p.pid)
-
-    max_rss = 0
     error_code = None
     while error_code is None:
-        try:
-            max_rss = max(max_rss, ps_p.memory_info().rss)
-        except (psutil.NoSuchProcess, psutil.ZombieProcess, psutil.AccessDenied, OSError, IOError):
-            pass
-        #except psutil.NoSuchProcess as e:
-        #    print("[prophylelib] Warning: psutil - NoSuchProcess (pid: {}, name: {}, msg: {})".format(e.pid, e.name, e.msg), file=sys.stderr)
-
-        # wait 0.2 s
         time.sleep(0.2)
         error_code = p.poll()
 
     out_fo.flush()
-
-    mem_mb = round(max_rss / (1024 * 1024.0), 1)
 
     if output_fn is not None:
         out_fo.close()
 
     if error_code == 0 or error_code == 141:
         if not silent:
-            message("Finished ({} MB used): {}".format(mem_mb, command_str))
+            message("Finished: {}".format(command_str))
     else:
-        message("Unfinished, an error occurred (error code {}, {} MB used): {}".format(error_code, mem_mb, command_str))
+        message("Unfinished, an error occurred (error code {}): {}".format(
+            error_code, command_str))
 
         if err_msg is not None:
             print('Error: {}'.format(err_msg), file=sys.stderr)
@@ -139,8 +133,8 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
 
 def mash_triangle(p, k=21, s=10000):
     with tempfile.TemporaryDirectory() as tmp_d:
-        o=os.path.join(tmp_d, "triangle.txt.xz")
-        cmd=f"mash triangle -k {k} -s {s} -p {p} | xz -9 > {o}"
+        o = os.path.join(tmp_d, "triangle.txt.xz")
+        cmd = f"mash triangle -k {k} -s {s} -p {p} | xz -9 > {o}"
         message("Running mash triangle, printing output to", o)
         run_safe(cmd)
     return
@@ -161,7 +155,6 @@ def convert_to_phylip(triangle_fn, phylip, rescale=False):
         > {output.phylip}
 
     """
-
     """
     (
         cd assemblies
@@ -173,6 +166,24 @@ def convert_to_phylip(triangle_fn, phylip, rescale=False):
     quicktree -in m _gono_dist.phylip \
         > gono_mashquicktree-nonlad.nw
     """
+    pass
+
+
+def mash_triangle(inp_fns, phylip_fn):
+    cmd = "mash triangle -p 7 {inp_fns}"
+    run_safe(cmd)
+
+
+def quicktree(phylip_fn, newick_fn):
+    cmd = f"quicktree -in m {phylip_fn} > {newick_fn}"
+    run_safe(cmd)
+
+
+def attotree(fns):
+    phylip_fn="a.phylip"
+    newick_fn="a.nw"
+    mash_triangle(fns, phylip_fn)
+    quick_tree(phylip_fn, newick_fn)
 
 
 def main():
@@ -180,21 +191,14 @@ def main():
     parser = argparse.ArgumentParser(description="")
 
     parser.add_argument(
-        'txt_fn',
-        metavar='input.txt',
-        help='',
-    )
-
-    parser.add_argument(
-        '-p',
-        '--param',
-        metavar='str',
-        dest='param',
-        default='',
+        'inp_fa',
+        nargs="+",
         help='',
     )
 
     args = parser.parse_args()
+
+    attotree(args.inp_fa)
 
 
 if __name__ == "__main__":
