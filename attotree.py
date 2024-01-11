@@ -170,20 +170,44 @@ def convert_to_phylip(triangle_fn, phylip, rescale=False):
 
 
 def mash_triangle(inp_fns, phylip_fn):
-    cmd = "mash triangle -p 7 {inp_fns}"
-    run_safe(cmd)
+    cmd = "mash triangle -s 10000 -p 7".split() + inp_fns
+    run_safe(cmd, output_fn=phylip_fn)
 
 
 def quicktree(phylip_fn, newick_fn):
-    cmd = f"quicktree -in m {phylip_fn} > {newick_fn}"
-    run_safe(cmd)
+    cmd = "quicktree -in m".split() + [phylip_fn]
+    run_safe(cmd, output_fn=newick_fn)
+
+
+def postprocess_quicktree_nw(nw1, nw2):
+    buffer = []
+    with open(nw1) as fo:
+        for x in fo:
+            x = x.strip()
+            # for lines containing names, update the name
+            if x and not x[0] in ":(":
+                p = x.split(":")
+                # remove dirname
+                basename_components = os.path.basename(p[0]).split(".")
+                if len(basename_components) == 1:
+                    basename_components.append("")
+                # remove suffix
+                p[0] = ".".join(basename_components[:-1])
+                # compose the original newick line with an updated name
+                x = ":".join(p)
+            buffer.append(x)
+
+    with open(nw2, "w") as fo:
+        print("".join(buffer), file=fo)
 
 
 def attotree(fns):
-    phylip_fn="a.phylip"
-    newick_fn="a.nw"
+    phylip_fn = "a.phylip"
+    newick_fn1 = "a.nw0"
+    newick_fn2 = "a.nw"
     mash_triangle(fns, phylip_fn)
-    quick_tree(phylip_fn, newick_fn)
+    quicktree(phylip_fn, newick_fn1)
+    postprocess_quicktree_nw(newick_fn1, newick_fn2)
 
 
 def main():
