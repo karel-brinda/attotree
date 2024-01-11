@@ -1,11 +1,25 @@
 #! /usr/bin/env python3
+"""attotree
+
+Author:  Karel Brinda <karel.brinda@inria.fr>
+
+License: MIT
+"""
 
 import argparse
 import datetime
 import os
+import re
 import subprocess
 import sys
 import time
+
+sys.path.append(os.path.dirname(__file__))
+import version
+
+PROGRAM = 'attotree'
+VERSION = version.VERSION
+DESC = 'rapid estimation of phylogenetic tree using sketching'
 
 DEFAULT_S = 10000
 DEFAULT_K = 21
@@ -20,41 +34,14 @@ def error(*msg, error_code=1):
     sys.exit(error_code)
 
 
-def message(*msg, subprogram='', upper=False):
-    """Print a message to stderr.
-
-    Args:
-        *msg: Message.
-        subprogram (str): Subprogram.
-        upper (bool): Transform text to upper cases.
-    """
-
-    #global log_file
-
+def message(*msg):
     dt = datetime.datetime.now()
     fdt = dt.strftime("%Y-%m-%d %H:%M:%S")
-
-    if upper:
-        msg = map(str, msg)
-        msg = map(str.upper, msg)
-
-    log_line = '[attotree{}] {} {}'.format(subprogram, fdt, " ".join(msg))
+    log_line = f'[attotree] {fdt} {msg}'
     print(log_line, file=sys.stderr)
 
-    #if not only_log:
-    #    print(log_line, file=sys.stderr)
-    #if log_file is not None:
-    #    log_file.write(log_line)
-    #    log_file.write("\n")
-    #    log_file.flush()
 
-
-def run_safe(command,
-             output_fn=None,
-             output_fo=None,
-             err_msg=None,
-             thr_exc=True,
-             silent=False):
+def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True, silent=False):
     """Run a shell command safely.
 
     Args:
@@ -92,13 +79,9 @@ def run_safe(command,
         out_fo = open(output_fn, "w+")
 
     if out_fo == sys.stdout:
-        p = subprocess.Popen(
-            "/bin/bash -e -o pipefail -c '{}'".format(command_str), shell=True)
+        p = subprocess.Popen("/bin/bash -e -o pipefail -c '{}'".format(command_str), shell=True)
     else:
-        p = subprocess.Popen(
-            "/bin/bash -e -o pipefail -c '{}'".format(command_str),
-            shell=True,
-            stdout=out_fo)
+        p = subprocess.Popen("/bin/bash -e -o pipefail -c '{}'".format(command_str), shell=True, stdout=out_fo)
 
     error_code = None
     while error_code is None:
@@ -114,8 +97,7 @@ def run_safe(command,
         if not silent:
             message("Finished: {}".format(command_str))
     else:
-        message("Unfinished, an error occurred (error code {}): {}".format(
-            error_code, command_str))
+        message("Unfinished, an error occurred (error code {}): {}".format(error_code, command_str))
 
         if err_msg is not None:
             print('Error: {}'.format(err_msg), file=sys.stderr)
@@ -164,8 +146,8 @@ def convert_to_phylip(triangle_fn, phylip, rescale=False):
     pass
 
 
-def mash_triangle(inp_fns, phylip_fn, k, s, threads):
-    cmd = f"mash triangle -s {s} -k {k} -p {threads}".split() + inp_fns
+def mash_triangle(inp_fns, phylip_fn, k, s, t):
+    cmd = f"mash triangle -s {s} -k {k} -p {t}".split() + inp_fns
     run_safe(cmd, output_fn=phylip_fn)
 
 
@@ -196,18 +178,58 @@ def postprocess_quicktree_nw(nw1, nw2):
         print("".join(buffer), file=fo)
 
 
-def attotree(fns):
+def attotree(fns, k, s, t):
     phylip_fn = "a.phylip"
     newick_fn1 = "a.nw0"
     newick_fn2 = "a.nw"
-    mash_triangle(fns, phylip_fn)
+    mash_triangle(fns, phylip_fn, k=k, s=s, t=t)
     quicktree(phylip_fn, newick_fn1)
     postprocess_quicktree_nw(newick_fn1, newick_fn2)
 
 
 def main():
 
-    parser = argparse.ArgumentParser(description="")
+    class CustomArgumentParser(argparse.ArgumentParser):
+
+        def print_help(self):
+            msg = self.format_help()
+            msg = msg.replace("usage:", "Usage:  ")
+            for x in 'PY_EXPR', 'PY_CODE':
+                msg = msg.replace("[{x} [{x} ...]]\n            ".format(x=x), x)
+                msg = msg.replace("[{x} [{x} ...]]".format(x=x), x)
+            repl = re.compile(r'\]\s+\[')
+            msg = repl.sub("] [", msg)
+            msg = msg.replace("\n  -0", "\n\nAdvanced options:\n  -0")
+            msg = msg.replace(" [-h] [-v]", "")
+            msg = msg.replace("[-0", "\n                    [-0")
+            print(msg)
+
+        def format_help(self):
+            formatter = self._get_formatter()
+            formatter.add_text(" \n" + self.description)
+            formatter.add_usage(self.usage, self._actions, self._mutually_exclusive_groups)
+            formatter.add_text(self.epilog)
+
+            # positionals, optionals and user-defined groups
+            for action_group in self._action_groups:
+                formatter.start_section(action_group.title)
+                formatter.add_text(action_group.description)
+                formatter.add_arguments(action_group._group_actions)
+                formatter.end_section()
+
+            return formatter.format_help()
+
+    parser = CustomArgumentParser(
+        formatter_class=argparse.RawTextHelpFormatter,
+        description="Program: {} ({})\n".format(PROGRAM, DESC) + "Version: {}\n".format(VERSION) +
+        "Author:  Karel Brinda <karel.brinda@inria.fr>",
+    )
+    parser.add_argument(
+        '-v',
+        '--version',
+        action='version',
+        version='{} {}'.format(PROGRAM, VERSION),
+    )
 
     parser.add_argument(
         '-k',
@@ -215,7 +237,7 @@ def main():
         type=int,
         metavar='INT',
         dest='k',
-        default=DEFAULT_S,
+        default=DEFAULT_K,
         help=f'kmer size [{DEFAULT_K}]',
     )
 
@@ -234,9 +256,9 @@ def main():
         '--threads',
         type=int,
         metavar='INT',
-        dest='s',
+        dest='t',
         default=DEFAULT_T,
-        help=f'sketch size [{DEFAULT_S}]',
+        help=f'number of threads [{DEFAULT_T}]',
     )
 
     parser.add_argument(
@@ -247,7 +269,11 @@ def main():
 
     args = parser.parse_args()
 
-    attotree(args.inp_fa)
+    attotree(fns=args.inp_fa, k=args.k, s=args.s, t=args.t)
+
+    args = parser.parse_args()
+
+    return args
 
 
 if __name__ == "__main__":
