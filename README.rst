@@ -1,4 +1,4 @@
-_NAME_
+attotree
 ==================================================================================
 
 
@@ -14,19 +14,19 @@ Quick example
 Issues
 ------
 
-Please use `Github issues <https://github.com/karel-brinda/_NAME_/issues>`_.
+Please use `Github issues <https://github.com/karel-brinda/attotree/issues>`_.
 
 
 Changelog
 ---------
 
-See `Releases <https://github.com/karel-brinda/_NAME_/releases>`_.
+See `Releases <https://github.com/karel-brinda/attotree/releases>`_.
 
 
 Licence
 -------
 
-`MIT <https://github.com/karel-brinda/_NAME_/blob/master/LICENSE.txt>`_
+`MIT <https://github.com/karel-brinda/attotree/blob/master/LICENSE.txt>`_
 
 
 Authors
