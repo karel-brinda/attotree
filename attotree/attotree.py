@@ -12,6 +12,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 sys.path.append(os.path.dirname(__file__))
@@ -109,16 +110,19 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
 
 
 def mash_triangle(inp_fns, phylip_fn, k, s, t):
+    message("Running mash")
     cmd = f"mash triangle -s {s} -k {k} -p {t}".split() + inp_fns
     run_safe(cmd, output_fn=phylip_fn)
 
 
 def quicktree(phylip_fn, newick_fn):
+    message("Running quicktree")
     cmd = "quicktree -in m".split() + [phylip_fn]
     run_safe(cmd, output_fn=newick_fn)
 
 
-def postprocess_quicktree_nw(nw1, nw2):
+def postprocess_quicktree_nw(nw1, nw_fo):
+    message("Postprocessing tree")
     buffer = []
     with open(nw1) as fo:
         for x in fo:
@@ -136,17 +140,17 @@ def postprocess_quicktree_nw(nw1, nw2):
                 x = ":".join(p)
             buffer.append(x)
 
-    with open(nw2, "w") as fo:
-        print("".join(buffer), file=fo)
+        print("".join(buffer), file=nw_fo)
 
 
-def attotree(fns, k, s, t):
-    phylip_fn = "a.phylip"
-    newick_fn1 = "a.nw0"
-    newick_fn2 = "a.nw"
-    mash_triangle(fns, phylip_fn, k=k, s=s, t=t)
-    quicktree(phylip_fn, newick_fn1)
-    postprocess_quicktree_nw(newick_fn1, newick_fn2)
+def attotree(fns, output_fo, k, s, t):
+    with tempfile.TemporaryDirectory() as d:
+        message('created a temporary directory', d)
+        phylip_fn = os.path.join(d, "distances.phylip")
+        newick_fn = os.path.join(d, "tree.nw")
+        mash_triangle(fns, phylip_fn, k=k, s=s, t=t)
+        quicktree(phylip_fn, newick_fn)
+        postprocess_quicktree_nw(newick_fn, output_fo)
 
 
 def main():
@@ -224,6 +228,15 @@ def main():
     )
 
     parser.add_argument(
+        '-o',
+        '--output',
+        metavar='FILE',
+        dest='o',
+        type=argparse.FileType('w'),
+        default=sys.stdout,
+        help=f'output [stdout]',
+    )
+    parser.add_argument(
         'inp_fa',
         nargs="+",
         help='',
@@ -231,7 +244,7 @@ def main():
 
     args = parser.parse_args()
 
-    attotree(fns=args.inp_fa, k=args.k, s=args.s, t=args.t)
+    attotree(fns=args.inp_fa, k=args.k, s=args.s, t=args.t, output_fo=args.o)
 
     args = parser.parse_args()
 
