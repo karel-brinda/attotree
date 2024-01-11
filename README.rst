@@ -1,15 +1,29 @@
-attotree
+Attotree
 ==================================================================================
 
 
 Introduction
 ------------
 
+Rapid estimation of phylogenetic tree direclty from FASTA files in the style of
+`Mashtree <https://github.com/lskatz/mashtree>`_.
+
+
+Dependencies
+------------
+
+* `Mash <https://github.com/marbl/Mash>`_ (installation: `conda install mash`)
+* `QuickTree <https://github.com/khowe/quicktree>`_ (installation: `conda install quicktree`)
 
 
 Quick example
 -------------
 
+```bash
+git clone https://github.com/karel-brinda/attotree
+cd attotree
+./attotree/attotree.py tests/*.fa
+```
 
 Issues
 ------
