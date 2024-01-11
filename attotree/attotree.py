@@ -37,7 +37,7 @@ def error(*msg, error_code=1):
 def message(*msg):
     dt = datetime.datetime.now()
     fdt = dt.strftime("%Y-%m-%d %H:%M:%S")
-    log_line = f'[attotree] {fdt} {msg}'
+    log_line = f'[attotree] {fdt} {" ".join(msg)}'
     print(log_line, file=sys.stderr)
 
 
@@ -106,44 +106,6 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
             error("A command failed, see messages above.")
 
         sys.exit(1)
-
-
-def mash_triangle(p, k=21, s=10000):
-    with tempfile.TemporaryDirectory() as tmp_d:
-        o = os.path.join(tmp_d, "triangle.txt.xz")
-        cmd = f"mash triangle -k {k} -s {s} -p {p} | xz -9 > {o}"
-        message("Running mash triangle, printing output to", o)
-        run_safe(cmd)
-    return
-
-
-def convert_to_phylip(triangle_fn, phylip, rescale=False):
-    # todo: rescale
-    """
-    xzcat {input.triangle} \\
-        | perl -pe 's/\.(fa|fasta)//g' \\
-        | xz -9 -T1 \\
-        > {output.phylip}
-    ./triangle_to_square.py {input.triangle} \\
-        | xz -9 -T1 \\
-        > {output.distmap}
-    ./scale_phylip.py -f {params.scaling_factor} {input.phylip} \\
-        | xz -9 -T1  \\
-        > {output.phylip}
-
-    """
-    """
-    (
-        cd assemblies
-        mash triangle -p 7 GCGS*.fa \
-    ) \
-        | perl -pe 's/\.(fa|fasta)//g' \
-        > _gono_dist.phylip
-
-    quicktree -in m _gono_dist.phylip \
-        > gono_mashquicktree-nonlad.nw
-    """
-    pass
 
 
 def mash_triangle(inp_fns, phylip_fn, k, s, t):
