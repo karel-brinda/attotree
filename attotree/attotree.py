@@ -20,7 +20,7 @@ import version
 
 PROGRAM = 'attotree'
 VERSION = version.VERSION
-DESC = 'rapid estimation of phylogenetic tree using sketching'
+DESC = 'rapid estimation of phylogenetic tree using sketching and neighor joining'
 
 DEFAULT_S = 10000
 DEFAULT_K = 21
@@ -247,8 +247,6 @@ def main():
     attotree(fns=args.inp_fa, k=args.k, s=args.s, t=args.t, output_fo=args.o)
 
     args = parser.parse_args()
-
-    return args
 
 
 if __name__ == "__main__":
