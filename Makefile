@@ -18,8 +18,15 @@ ROOT_DIR = $(shell pwd)
 
 all:
 
-help: ## Print help message
-	    @echo "$$(grep -hE '^\S+:.*##' $(MAKEFILE_LIST) | sed -e 's/:.*##\s*/:/' -e 's/^\(.\+\):\(.*\)/\\x1b[36m\1\\x1b[m:\2/' | column -c2 -t -s : | sort)"
+help: ## Print help messages
+	@echo -e "$$(grep -hE '^\S*(:.*)?##' $(MAKEFILE_LIST) \
+		| sed \
+			-e 's/:.*##\s*/:/' \
+			-e 's/^\(.*\):\(.*\)/   \\x1b[36m\1\\x1b[m:\2/' \
+			-e 's/^\([^#]\)/\1/g' \
+			-e 's/: /:/g' \
+			-e 's/^#\(.*\)#/\\x1b[90m\1\\x1b[m/' \
+		| column -c2 -t -s : )"
 
 clean: ## Clean
 	$(PYTHON) setup.py clean --all
@@ -56,13 +63,15 @@ yapf: ## Run YAPF (inline replacement)
 #############
 
 inc: ## Increment version
-inc: hooks
+inc:
 	./attotree/increment_version.py
 
 pypi: ## Upload to PyPI
-pypi: hooks
+pypi:
 	$(MAKE) clean
-	$(PYTHON) setup.py sdist bdist_wheel upload
+	$(PYTHON) setup.py sdist bdist_wheel
+	$(PYTHON) -m twine upload dist/*
+
 
 sha256: ## Compute sha256 for the PyPI package
 sha256:
