@@ -5,15 +5,38 @@ Attotree
 Introduction
 ------------
 
-Rapid estimation of phylogenetic tree direclty from FASTA files in the style of
-`Mashtree <https://github.com/lskatz/mashtree>`_.
+Rapid estimation of phylogenetic tree directly from FASTA files in the style of
+`Mashtree <https://github.com/lskatz/mashtree>`_. With the default options,
+the output is identical to Mashtree,
+but the computation takes only a fraction of time.
 
 
-Dependencies
+Installation
 ------------
 
-* `Mash <https://github.com/marbl/Mash>`_ (installation: ``conda install -c bioconda mash``)
-* `QuickTree <https://github.com/khowe/quicktree>`_ (installation: ``conda install -c bioconda quicktree``)
+Using Bioconda
+~~~~~~~~~~~~~~
+
+:: ..code-block:: bash
+
+    conda install -y -c bioconda -c conda-forge attotree
+
+
+Using PyPI
+~~~~~~~~~~
+
+First, install the following dependencies:
+
+* `Mash <https://github.com/marbl/Mash>`_
+* `QuickTree <https://github.com/khowe/quicktree>`_
+
+
+Then install the Attotree Python package:
+
+:: ..code-block:: bash
+
+    pip install -U attotree
+
 
 
 Quick example
@@ -21,9 +44,8 @@ Quick example
 
 .. code-block:: bash
 
-    git clone https://github.com/karel-brinda/attotree
-    cd attotree
-    ./attotree/attotree.py tests/*.fa
+    conda install attotree
+    attotree tests/*.fa
 
 
 Issues
