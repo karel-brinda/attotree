@@ -17,7 +17,7 @@ Installation
 Using Bioconda
 ~~~~~~~~~~~~~~
 
-:: code-block:: bash
+.. code-block:: bash
 
     conda install -y -c bioconda -c conda-forge attotree
 
@@ -33,7 +33,7 @@ First, install the following dependencies:
 
 Then install the Attotree Python package:
 
-:: code-block:: bash
+.. code-block:: bash
 
     pip install -U attotree
 
