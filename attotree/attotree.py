@@ -110,9 +110,12 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
         sys.exit(1)
 
 
-def mash_triangle(inp_fns, phylip_fn, k, s, t):
+def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
     message("Running mash")
-    cmd = f"mash triangle -s {s} -k {k} -p {t}".split() + inp_fns
+    cmd = f"mash triangle -s {s} -k {k} -p {t}".split()
+    if fof:
+        cmd += ["-l"]
+    cmd += inp_fns
     run_safe(cmd, output_fn=phylip_fn)
 
 
@@ -148,13 +151,13 @@ def postprocess_quicktree_nw(nw1, nw_fo):
         print("".join(buffer), file=nw_fo)
 
 
-def attotree(fns, output_fo, k, s, t, f):
+def attotree(fns, output_fo, k, s, t, phylogeny_algorithm, fof):
     with tempfile.TemporaryDirectory() as d:
         message('created a temporary directory', d)
         phylip_fn = os.path.join(d, "distances.phylip")
         newick_fn = os.path.join(d, "tree.nw")
-        mash_triangle(fns, phylip_fn, k=k, s=s, t=t)
-        quicktree(phylip_fn, newick_fn, algorithm=f)
+        mash_triangle(fns, phylip_fn, k=k, s=s, t=t, fof=fof)
+        quicktree(phylip_fn, newick_fn, algorithm=phylogeny_algorithm)
         postprocess_quicktree_nw(newick_fn, output_fo)
 
 
@@ -242,15 +245,22 @@ def main():
     )
 
     parser.add_argument(
-        'genome',
+        '-L',
+        action='store_true',
+        dest='L',
+        help=f'input files are list of files',
+    )
+
+    parser.add_argument(
+        'genomes',
         nargs="+",
-        help='genome fasta files',
+        help='input genome file (fasta / gzipped fasta / list of files when "-L")',
     )
 
     args = parser.parse_args()
 
     print(args)
-    attotree(fns=args.genome, k=args.k, s=args.s, t=args.t, output_fo=args.o, f=args.f)
+    attotree(fns=args.genomes, k=args.k, s=args.s, t=args.t, output_fo=args.o, phylogeny_algorithm=args.f, fof=args.L)
 
     args = parser.parse_args()
 
