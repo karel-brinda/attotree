@@ -123,7 +123,7 @@ def quicktree(phylip_fn, newick_fn, algorithm):
     message("Running quicktree")
 
     cmd = "quicktree -in m".split()
-    if algorithm=="upgma":
+    if algorithm == "upgma":
         cmd += ["-upgma"]
     cmd += [phylip_fn]
     run_safe(cmd, output_fn=newick_fn)
