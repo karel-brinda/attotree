@@ -20,7 +20,7 @@ import version
 
 PROGRAM = 'attotree'
 VERSION = version.VERSION
-DESC = 'rapid estimation of phylogenetic tree using sketching and neighor joining'
+DESC = 'rapid estimation of phylogenetic trees using sketching'
 
 DEFAULT_S = 10000
 DEFAULT_K = 21
@@ -159,15 +159,10 @@ def main():
 
         def print_help(self):
             msg = self.format_help()
-            msg = msg.replace("usage:", "Usage:  ")
-            for x in 'PY_EXPR', 'PY_CODE':
-                msg = msg.replace("[{x} [{x} ...]]\n            ".format(x=x), x)
-                msg = msg.replace("[{x} [{x} ...]]".format(x=x), x)
             repl = re.compile(r'\]\s+\[')
             msg = repl.sub("] [", msg)
-            msg = msg.replace("\n  -0", "\n\nAdvanced options:\n  -0")
             msg = msg.replace(" [-h] [-v]", "")
-            msg = msg.replace("[-0", "\n                    [-0")
+            msg = msg.replace(", --help", "        ")
             print(msg)
 
         def format_help(self):
@@ -192,14 +187,12 @@ def main():
     )
     parser.add_argument(
         '-v',
-        '--version',
         action='version',
         version='{} {}'.format(PROGRAM, VERSION),
     )
 
     parser.add_argument(
         '-k',
-        '--kmer-lenght',
         type=int,
         metavar='INT',
         dest='k',
@@ -209,7 +202,6 @@ def main():
 
     parser.add_argument(
         '-s',
-        '--sketch-size',
         type=int,
         metavar='INT',
         dest='s',
@@ -219,7 +211,6 @@ def main():
 
     parser.add_argument(
         '-t',
-        '--threads',
         type=int,
         metavar='INT',
         dest='t',
@@ -229,7 +220,6 @@ def main():
 
     parser.add_argument(
         '-o',
-        '--output',
         metavar='FILE',
         dest='o',
         type=argparse.FileType('w'),
