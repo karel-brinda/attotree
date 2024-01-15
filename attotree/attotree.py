@@ -25,6 +25,7 @@ DESC = 'rapid estimation of phylogenetic trees using sketching'
 DEFAULT_S = 10000
 DEFAULT_K = 21
 DEFAULT_T = os.cpu_count()
+DEFAULT_F = "nj"
 
 
 def error(*msg, error_code=1):
@@ -115,9 +116,13 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t):
     run_safe(cmd, output_fn=phylip_fn)
 
 
-def quicktree(phylip_fn, newick_fn):
+def quicktree(phylip_fn, newick_fn, algorithm):
     message("Running quicktree")
-    cmd = "quicktree -in m".split() + [phylip_fn]
+
+    cmd = "quicktree -in m".split()
+    if algorithm=="upgma":
+        cmd += ["-upgma"]
+    cmd += [phylip_fn]
     run_safe(cmd, output_fn=newick_fn)
 
 
@@ -143,13 +148,13 @@ def postprocess_quicktree_nw(nw1, nw_fo):
         print("".join(buffer), file=nw_fo)
 
 
-def attotree(fns, output_fo, k, s, t):
+def attotree(fns, output_fo, k, s, t, f):
     with tempfile.TemporaryDirectory() as d:
         message('created a temporary directory', d)
         phylip_fn = os.path.join(d, "distances.phylip")
         newick_fn = os.path.join(d, "tree.nw")
         mash_triangle(fns, phylip_fn, k=k, s=s, t=t)
-        quicktree(phylip_fn, newick_fn)
+        quicktree(phylip_fn, newick_fn, algorithm=f)
         postprocess_quicktree_nw(newick_fn, output_fo)
 
 
@@ -224,17 +229,28 @@ def main():
         dest='o',
         type=argparse.FileType('w'),
         default=sys.stdout,
-        help=f'output [stdout]',
+        help=f'newick output [stdout]',
     )
+
     parser.add_argument(
-        'inp_fa',
+        '-f',
+        metavar='STR',
+        dest='f',
+        default=DEFAULT_F,
+        choices=("nj", "upgma"),
+        help=f'tree inference algorithm (nj/upgma) [{DEFAULT_F}]',
+    )
+
+    parser.add_argument(
+        'genome',
         nargs="+",
-        help='',
+        help='genome fasta files',
     )
 
     args = parser.parse_args()
 
-    attotree(fns=args.inp_fa, k=args.k, s=args.s, t=args.t, output_fo=args.o)
+    print(args)
+    attotree(fns=args.genome, k=args.k, s=args.s, t=args.t, output_fo=args.o, f=args.f)
 
     args = parser.parse_args()
 
