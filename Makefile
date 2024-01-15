@@ -1,7 +1,7 @@
 .PHONY: \
 	all clean install \
 	test \
-	pylint flake8 yapf \
+	pylint flake8 format \
 	inc pypi sha256 \
 	docs readme wpypi wconda \
 	deppip depconda \
@@ -54,7 +54,7 @@ pylint: ## Run PyLint
 flake8: ## Run Flake8
 	flake8
 
-yapf: ## Run YAPF (inline replacement)
+format: ## Run YAPF (inline replacement)
 	yapf -i --recursive attotree setup.py tests
 
 
