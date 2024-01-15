@@ -20,11 +20,12 @@ import version
 
 PROGRAM = 'attotree'
 VERSION = version.VERSION
-DESC = 'rapid estimation of phylogenetic tree using sketching and neighor joining'
+DESC = 'rapid estimation of phylogenetic trees using sketching'
 
 DEFAULT_S = 10000
 DEFAULT_K = 21
 DEFAULT_T = os.cpu_count()
+DEFAULT_F = "nj"
 
 
 def error(*msg, error_code=1):
@@ -109,15 +110,22 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
         sys.exit(1)
 
 
-def mash_triangle(inp_fns, phylip_fn, k, s, t):
+def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
     message("Running mash")
-    cmd = f"mash triangle -s {s} -k {k} -p {t}".split() + inp_fns
+    cmd = f"mash triangle -s {s} -k {k} -p {t}".split()
+    if fof:
+        cmd += ["-l"]
+    cmd += inp_fns
     run_safe(cmd, output_fn=phylip_fn)
 
 
-def quicktree(phylip_fn, newick_fn):
+def quicktree(phylip_fn, newick_fn, algorithm):
     message("Running quicktree")
-    cmd = "quicktree -in m".split() + [phylip_fn]
+
+    cmd = "quicktree -in m".split()
+    if algorithm == "upgma":
+        cmd += ["-upgma"]
+    cmd += [phylip_fn]
     run_safe(cmd, output_fn=newick_fn)
 
 
@@ -143,13 +151,13 @@ def postprocess_quicktree_nw(nw1, nw_fo):
         print("".join(buffer), file=nw_fo)
 
 
-def attotree(fns, output_fo, k, s, t):
+def attotree(fns, output_fo, k, s, t, phylogeny_algorithm, fof):
     with tempfile.TemporaryDirectory() as d:
         message('created a temporary directory', d)
         phylip_fn = os.path.join(d, "distances.phylip")
         newick_fn = os.path.join(d, "tree.nw")
-        mash_triangle(fns, phylip_fn, k=k, s=s, t=t)
-        quicktree(phylip_fn, newick_fn)
+        mash_triangle(fns, phylip_fn, k=k, s=s, t=t, fof=fof)
+        quicktree(phylip_fn, newick_fn, algorithm=phylogeny_algorithm)
         postprocess_quicktree_nw(newick_fn, output_fo)
 
 
@@ -159,15 +167,10 @@ def main():
 
         def print_help(self):
             msg = self.format_help()
-            msg = msg.replace("usage:", "Usage:  ")
-            for x in 'PY_EXPR', 'PY_CODE':
-                msg = msg.replace("[{x} [{x} ...]]\n            ".format(x=x), x)
-                msg = msg.replace("[{x} [{x} ...]]".format(x=x), x)
             repl = re.compile(r'\]\s+\[')
             msg = repl.sub("] [", msg)
-            msg = msg.replace("\n  -0", "\n\nAdvanced options:\n  -0")
             msg = msg.replace(" [-h] [-v]", "")
-            msg = msg.replace("[-0", "\n                    [-0")
+            msg = msg.replace(", --help", "        ")
             print(msg)
 
         def format_help(self):
@@ -192,14 +195,12 @@ def main():
     )
     parser.add_argument(
         '-v',
-        '--version',
         action='version',
         version='{} {}'.format(PROGRAM, VERSION),
     )
 
     parser.add_argument(
         '-k',
-        '--kmer-lenght',
         type=int,
         metavar='INT',
         dest='k',
@@ -209,7 +210,6 @@ def main():
 
     parser.add_argument(
         '-s',
-        '--sketch-size',
         type=int,
         metavar='INT',
         dest='s',
@@ -219,7 +219,6 @@ def main():
 
     parser.add_argument(
         '-t',
-        '--threads',
         type=int,
         metavar='INT',
         dest='t',
@@ -229,22 +228,39 @@ def main():
 
     parser.add_argument(
         '-o',
-        '--output',
         metavar='FILE',
         dest='o',
         type=argparse.FileType('w'),
         default=sys.stdout,
-        help=f'output [stdout]',
+        help=f'newick output [stdout]',
     )
+
     parser.add_argument(
-        'inp_fa',
+        '-f',
+        metavar='STR',
+        dest='f',
+        default=DEFAULT_F,
+        choices=("nj", "upgma"),
+        help=f'tree inference algorithm (nj/upgma) [{DEFAULT_F}]',
+    )
+
+    parser.add_argument(
+        '-L',
+        action='store_true',
+        dest='L',
+        help=f'input files are list of files',
+    )
+
+    parser.add_argument(
+        'genomes',
         nargs="+",
-        help='',
+        help='input genome file (fasta / gzipped fasta / list of files when "-L")',
     )
 
     args = parser.parse_args()
 
-    attotree(fns=args.inp_fa, k=args.k, s=args.s, t=args.t, output_fo=args.o)
+    print(args)
+    attotree(fns=args.genomes, k=args.k, s=args.s, t=args.t, output_fo=args.o, phylogeny_algorithm=args.f, fof=args.L)
 
     args = parser.parse_args()
 
