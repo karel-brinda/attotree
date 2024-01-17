@@ -29,6 +29,13 @@ DEFAULT_F = "nj"
 
 
 def error(*msg, error_code=1):
+    """
+    Prints an error message to stderr and exits the program with the specified error code.
+
+    Args:
+        *msg: Variable number of message arguments to be printed.
+        error_code (int): The error code to exit the program with. Default is 1.
+    """
     print('attotree error:', *msg, file=sys.stderr)
     sys.stdout.flush()
     sys.stderr.flush()
@@ -37,6 +44,15 @@ def error(*msg, error_code=1):
 
 
 def message(*msg):
+    """
+    Prints a log message with a timestamp.
+
+    Args:
+        *msg: Variable number of message strings.
+
+    Returns:
+        None
+    """
     dt = datetime.datetime.now()
     fdt = dt.strftime("%Y-%m-%d %H:%M:%S")
     log_line = f'[attotree] {fdt} {" ".join(msg)}'
@@ -44,15 +60,22 @@ def message(*msg):
 
 
 def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True, silent=False):
-    """Run a shell command safely.
+    """
+    Executes a shell command safely.
 
     Args:
-        command (list of str): Command to execute.
-        output_fn (str): Name of a file for storing the output.
-        output_fo (fileobject): Output file object. If both params are None, the standard output is used.
-        err_msg (str): Error message if the command fails.
-        thr_exc (bool): Through exception if the command fails. error_msg or thr_exc must be set.
-        silent (bool): Silent mode (print messages only if the command fails).
+        command (list): The shell command to be executed, as a list of strings.
+        output_fn (str, optional): The filename to redirect the command's output to. Defaults to None.
+        output_fo (file object, optional): The file object to redirect the command's output to. Defaults to None.
+        err_msg (str, optional): The error message to be displayed if the command fails. Defaults to None.
+        thr_exc (bool, optional): Whether to raise an exception if the command fails. Defaults to True.
+        silent (bool, optional): Whether to suppress the output of the command. Defaults to False.
+
+    Raises:
+        SystemExit: If the command fails and `thr_exc` is True.
+
+    Returns:
+        None
     """
 
     assert output_fn is None or output_fo is None
@@ -111,6 +134,20 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
 
 
 def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
+    """
+    Runs the 'mash triangle' command with the given parameters.
+
+    Args:
+        inp_fns (list): List of input filenames.
+        phylip_fn (str): Output filename for the phylip file.
+        k (int): Value for the '-k' option.
+        s (int): Value for the '-s' option.
+        t (int): Value for the '-p' option.
+        fof (bool): Flag indicating whether to use the '-l' option.
+
+    Returns:
+        None
+    """
     message("Running mash")
     cmd = f"mash triangle -s {s} -k {k} -p {t}".split()
     if fof:
@@ -120,6 +157,17 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
 
 
 def quicktree(phylip_fn, newick_fn, algorithm):
+    """
+    Runs the quicktree algorithm to generate a phylogenetic tree.
+
+    Args:
+        phylip_fn (str): The filename of the input phylip file.
+        newick_fn (str): The filename of the output newick file.
+        algorithm (str): The algorithm to use for tree construction. Valid options are "upgma" or "nj".
+
+    Returns:
+        None
+    """
     message("Running quicktree")
 
     cmd = "quicktree -in m".split()
@@ -130,6 +178,16 @@ def quicktree(phylip_fn, newick_fn, algorithm):
 
 
 def postprocess_quicktree_nw(nw1, nw_fo):
+    """
+    Postprocesses the tree by updating the names in the newick file.
+
+    Args:
+        nw1 (str): Path to the input newick file.
+        nw_fo (file object): File object to write the postprocessed newick file.
+
+    Returns:
+        None
+    """
     message("Postprocessing tree")
     buffer = []
     with open(nw1) as fo:
@@ -152,6 +210,21 @@ def postprocess_quicktree_nw(nw1, nw_fo):
 
 
 def attotree(fns, output_fo, k, s, t, phylogeny_algorithm, fof):
+    """
+    Generate a phylogenetic tree using the given parameters.
+
+    Args:
+        fns (list): List of input filenames.
+        output_fo (file object): Output file object to write the generated tree.
+        k (int): Value for parameter k.
+        s (int): Value for parameter s.
+        t (int): Value for parameter t.
+        phylogeny_algorithm (str): Name of the phylogeny algorithm to use.
+        fof (bool): Flag indicating whether to use the fof parameter.
+
+    Returns:
+        None
+    """
     with tempfile.TemporaryDirectory() as d:
         message('created a temporary directory', d)
         phylip_fn = os.path.join(d, "distances.phylip")
