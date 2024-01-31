@@ -351,7 +351,7 @@ def main():
 
     args = parser.parse_args()
 
-    print(args)
+    #print(args)
     attotree(fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fo=args.o, phylogeny_algorithm=args.f, fof=args.L)
 
     args = parser.parse_args()
