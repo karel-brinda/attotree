@@ -32,6 +32,7 @@ help: ## Print help messages
 		| column -c2 -t -s : )"
 
 clean: ## Clean
+	rm -fv *.nw
 
 cleanall: clean ## Clean all
 
