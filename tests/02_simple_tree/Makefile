@@ -15,7 +15,8 @@ FASTAS=001334.fa 101058.fa 203692.fa 302649.fa 403790.fa
 all: tree.nw
 
 tree.nw: $(FASTAS)
-	../../attotree/attotree.py $? > $@
+	../../attotree/attotree.py $? > $@.tmp
+	mv $@.tmp $@
 
 %.fa:
 	curl -L "https://github.com/c2-d2/rase-db-spneumoniae-sparc/raw/master/isolates/$*" > $@

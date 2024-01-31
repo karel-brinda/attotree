@@ -158,7 +158,7 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
 
 def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn):
     with open(phylip_in_fn) as f:
-        with open(phylip_out_fn) as g:
+        with open(phylip_out_fn, "w+") as g:
             for x in f:
                 g.write(x)
     #basename_components = os.path.basename(p[0]).split(".")
@@ -207,7 +207,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
     message("Postprocessing tree")
     buffer = []
     with open(nw_in_fn) as fo:
-        for x in nw_out_fo:
+        for x in fo:
             x = x.strip()
             # for lines containing names, update the name
             if x and not x[0] in ":(":
@@ -222,7 +222,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
                 x = ":".join(p)
             buffer.append(x)
 
-        print("".join(buffer), file=nw_fo)
+        print("".join(buffer), file=nw_out_fo)
 
 
 def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof):
@@ -352,7 +352,7 @@ def main():
     args = parser.parse_args()
 
     print(args)
-    attotree(fns=args.genomes, k=args.k, s=args.s, t=args.t, output_fo=args.o, phylogeny_algorithm=args.f, fof=args.L)
+    attotree(fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fo=args.o, phylogeny_algorithm=args.f, fof=args.L)
 
     args = parser.parse_args()
 
