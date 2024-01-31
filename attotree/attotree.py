@@ -147,6 +147,9 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
 
     Returns:
         None
+
+    Raises:
+        None
     """
     message("Running mash")
     cmd = f"mash triangle -s {s} -k {k} -p {t}".split()
@@ -156,11 +159,46 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
     run_safe(cmd, output_fn=phylip_fn)
 
 
+def fn_to_node_name(fn):
+    """
+    Converts a file name to a node name by removing the path and file extension.
+
+    Args:
+        fn (str): The file name.
+
+    Returns:
+        str: The node name without the file extension.
+    """
+    basename_components = os.path.basename(fn).split(".")
+    if len(basename_components) == 1:
+        basename_components.append("")
+    # remove suffix
+    nname = ".".join(basename_components[:-1])
+    return nname
+
+
 def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn):
+    """
+    Postprocesses a PHYLIP file by copying its contents from the input file to the output file.
+
+    Args:
+        phylip_in_fn (str): The path to the input PHYLIP file.
+        phylip_out_fn (str): The path to the output PHYLIP file.
+
+    Returns:
+        None
+    """
     with open(phylip_in_fn) as f:
         with open(phylip_out_fn, "w+") as g:
-            for x in f:
-                g.write(x)
+            for i, x in enumerate(f):
+                x = x.strip()
+                if i != 0:
+                    print(x, file=sys.stderr)
+                    l, sep, r = x.partition("\t")
+                    l = fn_to_node_name(l)
+                    x = l + sep + r
+                message(x)
+                print(x, file=g)
     #basename_components = os.path.basename(p[0]).split(".")
     #if len(basename_components) == 1:
     #    basename_components.append("")
@@ -209,20 +247,8 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
     with open(nw_in_fn) as fo:
         for x in fo:
             x = x.strip()
-            # for lines containing names, update the name
-            if x and not x[0] in ":(":
-                p = x.split(":")
-                # remove dirname
-                basename_components = os.path.basename(p[0]).split(".")
-                if len(basename_components) == 1:
-                    basename_components.append("")
-                # remove suffix
-                p[0] = ".".join(basename_components[:-1])
-                # compose the original newick line with an updated name
-                x = ":".join(p)
             buffer.append(x)
-
-        print("".join(buffer), file=nw_out_fo)
+    print("".join(buffer), file=nw_out_fo)
 
 
 def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof):
