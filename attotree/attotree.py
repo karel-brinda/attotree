@@ -156,6 +156,18 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
     run_safe(cmd, output_fn=phylip_fn)
 
 
+def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn):
+    with open(phylip_in_fn) as f:
+        with open(phylip_out_fn) as g:
+            for x in f:
+                g.write(x)
+    #basename_components = os.path.basename(p[0]).split(".")
+    #if len(basename_components) == 1:
+    #    basename_components.append("")
+    ## remove suffix
+    #p[0] = ".".join(basename_components[:-1])
+
+
 def quicktree(phylip_fn, newick_fn, algorithm):
     """
     Runs the quicktree algorithm to generate a phylogenetic tree.
@@ -177,21 +189,25 @@ def quicktree(phylip_fn, newick_fn, algorithm):
     run_safe(cmd, output_fn=newick_fn)
 
 
-def postprocess_quicktree_nw(nw1, nw_fo):
+def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
     """
-    Postprocesses the tree by updating the names in the newick file.
+    Reformat newick.
+
+    Notes:
+    - assumption: node names already don't contain paths and prefixes
+    - expects fo to allow both a filename or stdout
 
     Args:
-        nw1 (str): Path to the input newick file.
-        nw_fo (file object): File object to write the postprocessed newick file.
+        nw_in_fn (str): Path to the input newick file.
+        nw_out_fo (file object): File object to write the postprocessed newick file.
 
     Returns:
         None
     """
     message("Postprocessing tree")
     buffer = []
-    with open(nw1) as fo:
-        for x in fo:
+    with open(nw_in_fn) as fo:
+        for x in nw_out_fo:
             x = x.strip()
             # for lines containing names, update the name
             if x and not x[0] in ":(":
@@ -209,13 +225,13 @@ def postprocess_quicktree_nw(nw1, nw_fo):
         print("".join(buffer), file=nw_fo)
 
 
-def attotree(fns, output_fo, k, s, t, phylogeny_algorithm, fof):
+def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof):
     """
     Generate a phylogenetic tree using the given parameters.
 
     Args:
         fns (list): List of input filenames.
-        output_fo (file object): Output file object to write the generated tree.
+        newick_fo (file object): Output file object to write the generated tree.
         k (int): Value for parameter k.
         s (int): Value for parameter s.
         t (int): Value for parameter t.
@@ -227,11 +243,14 @@ def attotree(fns, output_fo, k, s, t, phylogeny_algorithm, fof):
     """
     with tempfile.TemporaryDirectory() as d:
         message('created a temporary directory', d)
-        phylip_fn = os.path.join(d, "distances.phylip")
-        newick_fn = os.path.join(d, "tree.nw")
-        mash_triangle(fns, phylip_fn, k=k, s=s, t=t, fof=fof)
-        quicktree(phylip_fn, newick_fn, algorithm=phylogeny_algorithm)
-        postprocess_quicktree_nw(newick_fn, output_fo)
+        phylip1_fn = os.path.join(d, "distances.phylip0")
+        phylip2_fn = os.path.join(d, "distances.phylip")
+        newick1_fn = os.path.join(d, "tree.nw")
+        newick2_fo = newick_fo
+        mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof)
+        postprocess_mash_phylip(phylip1_fn, phylip2_fn)
+        quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm)
+        postprocess_quicktree_nw(newick1_fn, newick2_fo)
 
 
 def main():
