@@ -1,7 +1,7 @@
 .PHONY: all clean
 
 all:
-	../../attotree/attotree.py
+	../../attotree/attotree.py -v
 
 clean:
 
