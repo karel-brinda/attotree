@@ -15,13 +15,17 @@ FASTAS=001334.fa 101058.fa 203692.fa 302649.fa 403790.fa
 all: tree.nw tree_file_list.nw
 
 tree.nw: $(FASTAS)
-	../../attotree/attotree.py $? > $@.tmp
-	mv $@.tmp $@
+	../../attotree/attotree.py $? > "$@.tmp"
+	mv "$@.tmp" "$@"
 
-tree_file_list.nw: $(FASTAS)
-	echo "$?" | perl -pe 's/ /\n/g' > file_list.txt
-	../../attotree/attotree.py -L file_list.txt  > $@.tmp
-	mv $@.tmp $@
+tree_file_list.nw: file_list.txt
+	../../attotree/attotree.py -L "$<"  > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+file_list.txt: $(FASTAS)
+	echo "$?" \
+		| perl -pe 's/ /\n/g' \
+		> file_list.txt
 
 %.fa:
 	curl -L "https://github.com/c2-d2/rase-db-spneumoniae-sparc/raw/master/isolates/$*" > $@
