@@ -12,9 +12,11 @@ FASTAS=$(shell tar -tf test_spneumo.tar.xz)
 ## Compare trees ##
 ###################
 
-all: tree.default.nw tree.file_list.nw tree.precomputed.newick
-	diff tree.default.nw tree.precomputed.newick
-	diff tree.file_list.nw tree.precomputed.newick
+all: tree.precomputed.newick tree.default.nw tree.file_list.nw tree.file_list_proc_subst.nw
+	for x in $^; do \
+		2>&1 echo Testing "$$x"; \
+		diff $$x tree.precomputed.newick; \
+	done
 
 ###################################
 # Different ways to compute trees #
@@ -26,6 +28,10 @@ tree.default.nw: file_list.txt
 
 tree.file_list.nw: file_list.txt
 	../../attotree/attotree.py -L "$<"  > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.file_list_proc_subst.nw: file_list.txt
+	../../attotree/attotree.py -L <(head -n 99999 "$<")  > "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.precomputed.newick: tree.default.nw
