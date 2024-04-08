@@ -273,6 +273,14 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof):
         phylip2_fn = os.path.join(d, "distances.phylip")
         newick1_fn = os.path.join(d, "tree.nw")
         newick2_fo = newick_fo
+        if fof:
+            #This is to make the list of file pass to Mash even with
+            #process substitutions
+            old_fof_fn = fns[0]
+            new_fof_fn = os.path.join(d, "fof.txt")
+            with open(old_fof_fn) as f, open(new_fof_fn, 'w') as g:
+                g.write(f.read())
+            fns = [new_fof_fn]
         mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof)
         postprocess_mash_phylip(phylip1_fn, phylip2_fn)
         quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm)
