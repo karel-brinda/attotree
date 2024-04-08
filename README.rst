@@ -1,5 +1,5 @@
 Attotree
-==================================================================================
+========
 
 
 Introduction
@@ -56,7 +56,7 @@ Command-line parameters
     $ attotree -h
 
     Program: attotree (rapid estimation of phylogenetic trees using sketching)
-    Version: 0.1.1
+    Version: 0.1.3
     Author:  Karel Brinda <karel.brinda@inria.fr>
 
     usage: attotree [-k INT] [-s INT] [-t INT] [-o FILE] [-f STR] [-L] genomes [genomes ...]
@@ -98,4 +98,3 @@ Authors
 -------
 
 `Karel Brinda <http://brinda.eu>`_ <karel.brinda@inria.fr>
-
