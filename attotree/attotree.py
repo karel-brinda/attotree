@@ -328,7 +328,11 @@ def main():
     Returns:
         None
     """
+
     class CustomArgumentParser(argparse.ArgumentParser):
+
+        def __init__(self, prog=None, **kwargs):
+            super().__init__(prog="attotree", **kwargs)
 
         def print_help(self):
             """
