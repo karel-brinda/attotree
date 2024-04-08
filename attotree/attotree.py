@@ -30,9 +30,10 @@ DEFAULT_F = "nj"
 
 def shorten_output(s):
     # return pprint.pformat(s)
-    if len(s)>40:
-        s=s[:40]+"..."
+    if len(s) > 40:
+        s = s[:40] + "..."
     return s
+
 
 def error(*msg, error_code=1):
     """
@@ -103,7 +104,7 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
         command_str_nice = shorten_output(command_str)
 
     if not silent:
-        message("Shell command:", command_str_nice)
+        message(f"Shell command: '{command_str_nice}'")
 
     if output_fn is None:
         if output_fo is None:
@@ -130,9 +131,9 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
 
     if error_code == 0 or error_code == 141:
         if not silent:
-            message("Finished: {}".format(command_str_nice))
+            message(f"Finished: '{command_str_nice}'")
     else:
-        message("Unfinished, an error occurred (error code {}): {}".format(error_code, command_str))
+        message(f"Unfinished, an error occurred (error code {error_code}): '{command_str}'")
 
         if err_msg is not None:
             print('Error: {}'.format(err_msg), file=sys.stderr)
@@ -161,7 +162,7 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof, verbose):
     Raises:
         None
     """
-    message("Running mash")
+    message("Running Mash")
     cmd = f"mash triangle -s {s} -k {k} -p {t}".split()
     if fof:
         cmd += ["-l"]
@@ -203,11 +204,11 @@ def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn, verbose):
             for i, x in enumerate(f):
                 x = x.strip()
                 if i != 0:
-                    print(x, file=sys.stderr)
                     l, sep, r = x.partition("\t")
                     l = fn_to_node_name(l)
                     x = l + sep + r
-                message(x)
+                if verbose:
+                    message("Mash output:", x)
                 print(x, file=g)
     #basename_components = os.path.basename(p[0]).split(".")
     #if len(basename_components) == 1:
@@ -283,7 +284,7 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose):
         None
     """
     with tempfile.TemporaryDirectory() as d:
-        message('created a temporary directory', d)
+        message('Created a temporary directory', d)
         phylip1_fn = os.path.join(d, "distances.phylip0")
         phylip2_fn = os.path.join(d, "distances.phylip")
         newick1_fn = os.path.join(d, "tree.nw")
