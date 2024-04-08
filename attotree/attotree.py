@@ -207,8 +207,6 @@ def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn, verbose):
                     l, sep, r = x.partition("\t")
                     l = fn_to_node_name(l)
                     x = l + sep + r
-                if verbose:
-                    message("Mash output:", x)
                 print(x, file=g)
     #basename_components = os.path.basename(p[0]).split(".")
     #if len(basename_components) == 1:
