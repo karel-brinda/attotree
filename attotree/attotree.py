@@ -29,7 +29,15 @@ DEFAULT_F = "nj"
 
 
 def shorten_output(s):
-    # return pprint.pformat(s)
+    """
+    Shortens the output string if it exceeds 40 characters.
+
+    Args:
+        s (str): The input string.
+
+    Returns:
+        str: The shortened string.
+    """
     if len(s) > 40:
         s = s[:40] + "..."
     return s
@@ -208,11 +216,6 @@ def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn, verbose):
                     l = fn_to_node_name(l)
                     x = l + sep + r
                 print(x, file=g)
-    #basename_components = os.path.basename(p[0]).split(".")
-    #if len(basename_components) == 1:
-    #    basename_components.append("")
-    ## remove suffix
-    #p[0] = ".".join(basename_components[:-1])
 
 
 def quicktree(phylip_fn, newick_fn, algorithm, verbose):
@@ -277,6 +280,7 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
         phylogeny_algorithm (str): Name of the phylogeny algorithm to use.
         fof (bool): Flag indicating whether to use the fof parameter.
         verbose (bool): Flag indicating whether to enable verbose output.
+        debug (bool): Flag indicating whether to retain auxiliary files.
 
     Returns:
         None
@@ -318,10 +322,21 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
 
 
 def main():
+    """
+    The main function that is executed when the script is run.
 
+    Returns:
+        None
+    """
     class CustomArgumentParser(argparse.ArgumentParser):
 
         def print_help(self):
+            """
+            Prints the help message.
+
+            Returns:
+                None
+            """
             msg = self.format_help()
             repl = re.compile(r'\]\s+\[')
             msg = repl.sub("] [", msg)
