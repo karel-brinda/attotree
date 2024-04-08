@@ -266,7 +266,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo, verbose):
     print("".join(buffer), file=nw_out_fo)
 
 
-def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose):
+def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     """
     Generate a phylogenetic tree using the given parameters.
 
@@ -283,7 +283,17 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose):
     Returns:
         None
     """
-    with tempfile.TemporaryDirectory() as d:
+    features = []
+    if verbose:
+        features.append("verbose")
+    if debug:
+        features.append("debuging")
+    if len(features) > 0:
+        fmsg = f" ({', '.join(features)})"
+    else:
+        fmsg = ""
+    message(f"Attotree starting{fmsg}")
+    with tempfile.TemporaryDirectory(delete=not debug) as d:
         message('Created a temporary directory', d)
         phylip1_fn = os.path.join(d, "distances.phylip0")
         phylip2_fn = os.path.join(d, "distances.phylip")
@@ -301,6 +311,12 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose):
         postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
         quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
         postprocess_quicktree_nw(newick1_fn, newick2_fo, verbose=verbose)
+
+    if debug:
+        emsg = f" (auxiliary files retained in '{d}')"
+    else:
+        emsg = ""
+    message(f"Attotree finished{emsg}")
 
 
 def main():
@@ -394,6 +410,13 @@ def main():
     )
 
     parser.add_argument(
+        '-D',
+        action='store_true',
+        dest='D',
+        help=f'debugging (don\'t remove tmp dir)',
+    )
+
+    parser.add_argument(
         '-V',
         action='store_true',
         dest='V',
@@ -411,7 +434,7 @@ def main():
     #print(args)
     attotree(
         fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fo=args.o, phylogeny_algorithm=args.f, fof=args.L,
-        verbose=args.V
+        verbose=args.V, debug=args.D
     )
 
     args = parser.parse_args()
