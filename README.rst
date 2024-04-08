@@ -54,12 +54,12 @@ Command-line parameters
 .. code-block::
 
     $ attotree -h
-
+ 
     Program: attotree (rapid estimation of phylogenetic trees using sketching)
     Version: 0.1.3
     Author:  Karel Brinda <karel.brinda@inria.fr>
 
-    usage: attotree [-k INT] [-s INT] [-t INT] [-o FILE] [-f STR] [-L] genomes [genomes ...]
+    usage: attotree [-k INT] [-s INT] [-t INT] [-o FILE] [-f STR] [-L] [-D] [-V] genomes [genomes ...]
 
     positional arguments:
       genomes     input genome file (fasta / gzipped fasta / list of files when "-L")
@@ -73,6 +73,8 @@ Command-line parameters
       -o FILE     newick output [stdout]
       -f STR      tree inference algorithm (nj/upgma) [nj]
       -L          input files are list of files
+      -D          debugging (don't remove tmp dir)
+      -V          verbose output
 
 
 
