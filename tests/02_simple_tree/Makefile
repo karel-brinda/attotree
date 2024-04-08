@@ -6,20 +6,45 @@ SHELL=/usr/bin/env bash -eo pipefail
 
 .SUFFIXES:
 
-FASTAS=001334.fa 101058.fa 203692.fa 302649.fa 403790.fa
+FASTAS=$(shell tar -tf test_spneumo.tar.xz)
+
+###################
+## Compare trees ##
+###################
+
+all: tree.precomputed.newick tree.default.nw tree.file_list.nw tree.file_list_proc_subst.nw
+	for x in $^; do \
+		2>&1 echo Testing "$$x"; \
+		diff $$x tree.precomputed.newick; \
+	done
+
+###################################
+# Different ways to compute trees #
+###################################
+
+tree.default.nw: file_list.txt
+	../../attotree/attotree.py $(shell cat $<) > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.file_list.nw: file_list.txt
+	../../attotree/attotree.py -L "$<"  > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.file_list_proc_subst.nw: file_list.txt
+	../../attotree/attotree.py -L <(head -n 99999 "$<")  > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.precomputed.newick: tree.default.nw
+	cp $< $@
 
 ##############
-## Commands ##
+# Input data #
 ##############
 
-all: tree.nw
-
-tree.nw: $(FASTAS)
-	../../attotree/attotree.py $? > $@.tmp
-	mv $@.tmp $@
-
-%.fa:
-	curl -L "https://github.com/c2-d2/rase-db-spneumoniae-sparc/raw/master/isolates/$*" > $@
+file_list.txt: test_spneumo.tar.xz
+	tar xvf $<
+	tar -tf $< > file_list.txt.tmp
+	mv file_list.txt.tmp file_list.txt
 
 help: ## Print help messages
 	@echo -e "$$(grep -hE '^\S*(:.*)?##' $(MAKEFILE_LIST) \
@@ -32,8 +57,9 @@ help: ## Print help messages
 		| column -c2 -t -s : )"
 
 clean: ## Clean
-	rm -fv *.nw
+	rm -f *.nw *.tmp
 
 cleanall: clean ## Clean all
+	rm -f file_list.txt *.fa
 
 view: ## View output

@@ -28,6 +28,21 @@ DEFAULT_T = os.cpu_count()
 DEFAULT_F = "nj"
 
 
+def shorten_output(s):
+    """
+    Shortens the output string if it exceeds 40 characters.
+
+    Args:
+        s (str): The input string.
+
+    Returns:
+        str: The shortened string.
+    """
+    if len(s) > 40:
+        s = s[:40] + "..."
+    return s
+
+
 def error(*msg, error_code=1):
     """
     Prints an error message to stderr and exits the program with the specified error code.
@@ -59,7 +74,7 @@ def message(*msg):
     print(log_line, file=sys.stderr)
 
 
-def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True, silent=False):
+def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True, silent=False, verbose=True):
     """
     Executes a shell command safely.
 
@@ -91,9 +106,13 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
         command_safe.append(part)
 
     command_str = " ".join(command_safe)
+    if verbose:
+        command_str_nice = command_str
+    else:
+        command_str_nice = shorten_output(command_str)
 
     if not silent:
-        message("Shell command:", command_str)
+        message(f"Shell command: '{command_str_nice}'")
 
     if output_fn is None:
         if output_fo is None:
@@ -120,9 +139,9 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
 
     if error_code == 0 or error_code == 141:
         if not silent:
-            message("Finished: {}".format(command_str))
+            message(f"Finished: '{command_str_nice}'")
     else:
-        message("Unfinished, an error occurred (error code {}): {}".format(error_code, command_str))
+        message(f"Unfinished, an error occurred (error code {error_code}): '{command_str}'")
 
         if err_msg is not None:
             print('Error: {}'.format(err_msg), file=sys.stderr)
@@ -133,7 +152,7 @@ def run_safe(command, output_fn=None, output_fo=None, err_msg=None, thr_exc=True
         sys.exit(1)
 
 
-def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
+def mash_triangle(inp_fns, phylip_fn, k, s, t, fof, verbose):
     """
     Runs the 'mash triangle' command with the given parameters.
 
@@ -151,12 +170,12 @@ def mash_triangle(inp_fns, phylip_fn, k, s, t, fof):
     Raises:
         None
     """
-    message("Running mash")
+    message("Running Mash")
     cmd = f"mash triangle -s {s} -k {k} -p {t}".split()
     if fof:
         cmd += ["-l"]
     cmd += inp_fns
-    run_safe(cmd, output_fn=phylip_fn)
+    run_safe(cmd, output_fn=phylip_fn, verbose=verbose)
 
 
 def fn_to_node_name(fn):
@@ -177,7 +196,7 @@ def fn_to_node_name(fn):
     return nname
 
 
-def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn):
+def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn, verbose):
     """
     Postprocesses a PHYLIP file by copying its contents from the input file to the output file.
 
@@ -193,20 +212,13 @@ def postprocess_mash_phylip(phylip_in_fn, phylip_out_fn):
             for i, x in enumerate(f):
                 x = x.strip()
                 if i != 0:
-                    print(x, file=sys.stderr)
                     l, sep, r = x.partition("\t")
                     l = fn_to_node_name(l)
                     x = l + sep + r
-                message(x)
                 print(x, file=g)
-    #basename_components = os.path.basename(p[0]).split(".")
-    #if len(basename_components) == 1:
-    #    basename_components.append("")
-    ## remove suffix
-    #p[0] = ".".join(basename_components[:-1])
 
 
-def quicktree(phylip_fn, newick_fn, algorithm):
+def quicktree(phylip_fn, newick_fn, algorithm, verbose):
     """
     Runs the quicktree algorithm to generate a phylogenetic tree.
 
@@ -224,12 +236,15 @@ def quicktree(phylip_fn, newick_fn, algorithm):
     if algorithm == "upgma":
         cmd += ["-upgma"]
     cmd += [phylip_fn]
-    run_safe(cmd, output_fn=newick_fn)
+    run_safe(cmd, output_fn=newick_fn, verbose=verbose)
 
 
-def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
+def postprocess_quicktree_nw(nw_in_fn, nw_out_fo, verbose):
     """
     Reformat newick.
+
+    This function reads an input newick file, removes any leading or trailing whitespace from each line,
+    and writes the postprocessed newick file to the specified file object.
 
     Notes:
     - assumption: node names already don't contain paths and prefixes
@@ -238,6 +253,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
     Args:
         nw_in_fn (str): Path to the input newick file.
         nw_out_fo (file object): File object to write the postprocessed newick file.
+        verbose (bool): If True, print additional information during the postprocessing.
 
     Returns:
         None
@@ -251,7 +267,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo):
     print("".join(buffer), file=nw_out_fo)
 
 
-def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof):
+def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     """
     Generate a phylogenetic tree using the given parameters.
 
@@ -263,27 +279,68 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof):
         t (int): Value for parameter t.
         phylogeny_algorithm (str): Name of the phylogeny algorithm to use.
         fof (bool): Flag indicating whether to use the fof parameter.
+        verbose (bool): Flag indicating whether to enable verbose output.
+        debug (bool): Flag indicating whether to retain auxiliary files.
 
     Returns:
         None
     """
-    with tempfile.TemporaryDirectory() as d:
-        message('created a temporary directory', d)
+    features = []
+    if verbose:
+        features.append("verbose")
+    if debug:
+        features.append("debuging")
+    if len(features) > 0:
+        fmsg = f" ({', '.join(features)})"
+    else:
+        fmsg = ""
+    message(f"Attotree starting{fmsg}")
+    with tempfile.TemporaryDirectory(delete=not debug) as d:
+        message('Created a temporary directory', d)
         phylip1_fn = os.path.join(d, "distances.phylip0")
         phylip2_fn = os.path.join(d, "distances.phylip")
         newick1_fn = os.path.join(d, "tree.nw")
         newick2_fo = newick_fo
-        mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof)
-        postprocess_mash_phylip(phylip1_fn, phylip2_fn)
-        quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm)
-        postprocess_quicktree_nw(newick1_fn, newick2_fo)
+        if fof:
+            #This is to make the list of file pass to Mash even with
+            #process substitutions
+            old_fof_fn = fns[0]
+            new_fof_fn = os.path.join(d, "fof.txt")
+            with open(old_fof_fn) as f, open(new_fof_fn, 'w') as g:
+                g.write(f.read())
+            fns = [new_fof_fn]
+        mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof, verbose=verbose)
+        postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
+        quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
+        postprocess_quicktree_nw(newick1_fn, newick2_fo, verbose=verbose)
+
+    if debug:
+        emsg = f" (auxiliary files retained in '{d}')"
+    else:
+        emsg = ""
+    message(f"Attotree finished{emsg}")
 
 
 def main():
+    """
+    The main function that is executed when the script is run.
+
+    Returns:
+        None
+    """
 
     class CustomArgumentParser(argparse.ArgumentParser):
 
+        def __init__(self, prog=None, **kwargs):
+            super().__init__(prog="attotree", **kwargs)
+
         def print_help(self):
+            """
+            Prints the help message.
+
+            Returns:
+                None
+            """
             msg = self.format_help()
             repl = re.compile(r'\]\s+\[')
             msg = repl.sub("] [", msg)
@@ -370,6 +427,20 @@ def main():
     )
 
     parser.add_argument(
+        '-D',
+        action='store_true',
+        dest='D',
+        help=f'debugging (don\'t remove tmp dir)',
+    )
+
+    parser.add_argument(
+        '-V',
+        action='store_true',
+        dest='V',
+        help=f'verbose output',
+    )
+
+    parser.add_argument(
         'genomes',
         nargs="+",
         help='input genome file (fasta / gzipped fasta / list of files when "-L")',
@@ -378,7 +449,10 @@ def main():
     args = parser.parse_args()
 
     #print(args)
-    attotree(fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fo=args.o, phylogeny_algorithm=args.f, fof=args.L)
+    attotree(
+        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fo=args.o, phylogeny_algorithm=args.f, fof=args.L,
+        verbose=args.V, debug=args.D
+    )
 
     args = parser.parse_args()
 
