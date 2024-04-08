@@ -38,8 +38,9 @@ help: ## Print help messages
 		| column -c2 -t -s : )"
 
 clean: ## Clean
-	rm -fv *.nw *.fa
+	rm -fv *.fa
 
 cleanall: clean ## Clean all
+	rm -fv *.tar.xz
 
 view: ## View output
