@@ -1,4 +1,4 @@
 file_list.txt
-*.tmp
 *.fa
 *.nw
+!tree.precomputed.nw

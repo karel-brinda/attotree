@@ -6,29 +6,33 @@ SHELL=/usr/bin/env bash -eo pipefail
 
 .SUFFIXES:
 
-FASTAS=001334.fa 101058.fa 203692.fa 302649.fa 403790.fa
+###################
+## Compare trees ##
+###################
 
-##############
-## Commands ##
-##############
+all: tree.default.nw tree.file_list.nw
+	diff $^
 
-all: tree.nw tree_file_list.nw
+###################################
+# Different ways to compute trees #
+###################################
 
-tree.nw: $(FASTAS)
-	../../attotree/attotree.py $? > "$@.tmp"
+tree.default.nw: file_list.txt
+	cat $< | xargs ../../attotree/attotree.py  > "$@.tmp"
 	mv "$@.tmp" "$@"
 
-tree_file_list.nw: file_list.txt
+tree.file_list.nw: file_list.txt
 	../../attotree/attotree.py -L "$<"  > "$@.tmp"
 	mv "$@.tmp" "$@"
 
-file_list.txt: $(FASTAS)
-	echo "$?" \
-		| perl -pe 's/ /\n/g' \
-		> file_list.txt
+##############
+# Input data #
+##############
 
-%.fa:
-	curl -L "https://github.com/c2-d2/rase-db-spneumoniae-sparc/raw/master/isolates/$*" > $@
+file_list.txt: test_spneumo.tar.xz
+	tar xvf $<
+	tar -tf $< > $@.tmp
+	mv $@.tmp $@
 
 help: ## Print help messages
 	@echo -e "$$(grep -hE '^\S*(:.*)?##' $(MAKEFILE_LIST) \
