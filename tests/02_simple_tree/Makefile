@@ -12,10 +12,15 @@ FASTAS=001334.fa 101058.fa 203692.fa 302649.fa 403790.fa
 ## Commands ##
 ##############
 
-all: tree.nw
+all: tree.nw tree_file_list.nw
 
 tree.nw: $(FASTAS)
 	../../attotree/attotree.py $? > $@.tmp
+	mv $@.tmp $@
+
+tree_file_list.nw: $(FASTAS)
+	echo "$?" | perl -pe 's/ /\n/g' > file_list.txt
+	../../attotree/attotree.py -L file_list.txt  > $@.tmp
 	mv $@.tmp $@
 
 %.fa:
