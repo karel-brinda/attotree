@@ -24,7 +24,7 @@ all: \
 	done
 
 data: ## Regenerate test data
-data: tree.precomputed.newick
+data: tree.precomputed.newick file_list.txt
 
 
 # Different ways to compute trees
