@@ -21,6 +21,7 @@ all1: \
 	tree.default_verbose_debug.nw \
 	tree.file_list.nw \
 	tree.file_list_proc_subst.nw \
+	tree.file_list_proc_subst_two_lists.nw \
 	tree.default_o-param.nw
 	for x in $^; do \
 		2>&1 echo Testing "$$x"; \
@@ -69,6 +70,11 @@ tree.file_list.nw: file_list.txt
 tree.file_list_proc_subst.nw: file_list.txt
 	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py -L <(head -n 99999 "$<")  > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.file_list_proc_subst_two_lists.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
+	../../attotree/attotree.py -L <(head -n 2 "$<") <(tail -n+3 "$<")  > "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.precomputed.newick: tree.default.nw

@@ -314,12 +314,13 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, tmp_dir, fof, verbose
     newick2_fn = newick_fn
     if fof:
         #This is to make the list of file pass to Mash even with
-        #process substitutions
-        old_fof_fn = fns[0]
+        #process substitutions and allows for merging mutliple lists
         new_fof_fn = os.path.join(d, "fof.txt")
-        with open(old_fof_fn) as f, open(new_fof_fn, 'w') as g:
-            g.write(f.read())
-        fns = [new_fof_fn]
+        with open(new_fof_fn, 'w') as g:
+            for old_fof_fn in fns:
+                with open(old_fof_fn) as f:
+                    g.write(f.read().strip() + "\n")
+                fns = [new_fof_fn]
     mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof, verbose=verbose)
     postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
     quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
@@ -443,7 +444,7 @@ def main():
         '-L',
         action='store_true',
         dest='L',
-        help=f'input files are list of files',
+        help=f'input files are list(s) of files',
     )
 
     parser.add_argument(
