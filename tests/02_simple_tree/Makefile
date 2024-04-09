@@ -1,4 +1,4 @@
-.PHONY: all help clean cleanall view data
+.PHONY: all all1 all2 help clean cleanall view data
 
 SHELL=/usr/bin/env bash -eo pipefail
 
@@ -12,7 +12,10 @@ FASTAS=$(shell tar -tf test_spneumo.tar.xz)
 ## Main ##
 ##########
 all: ## Run all tests
-all: \
+all: all1 all2
+
+#w/diff
+all1: \
 	tree.default.nw \
 	tree.default_local_tmp_dir.nw \
 	tree.default_verbose_debug.nw \
@@ -24,6 +27,10 @@ all: \
 		diff $$x tree.precomputed.newick; \
 	done
 
+#w/o diff
+all2: \
+	tree.default_upgma.nw
+
 data: ## Regenerate test data
 data: tree.precomputed.newick file_list.txt
 
@@ -32,6 +39,11 @@ data: tree.precomputed.newick file_list.txt
 tree.default.nw: file_list.txt
 	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py $(shell cat $<) > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.default_upgma.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
+	../../attotree/attotree.py $(shell cat $<) -a upgma> "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.default_local_tmp_dir.nw: file_list.txt
