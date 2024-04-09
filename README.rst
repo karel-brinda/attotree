@@ -54,9 +54,9 @@ Command-line parameters
 .. code-block::
 
     $ attotree -h
- 
+
     Program: attotree (rapid estimation of phylogenetic trees using sketching)
-    Version: 0.1.3
+    Version: 0.1.4
     Author:  Karel Brinda <karel.brinda@inria.fr>
 
     usage: attotree [-k INT] [-s INT] [-t INT] [-o FILE] [-f STR] [-L] [-D] [-V] genomes [genomes ...]
