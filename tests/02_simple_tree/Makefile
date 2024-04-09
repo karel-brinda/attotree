@@ -8,10 +8,10 @@ SHELL=/usr/bin/env bash -eo pipefail
 
 FASTAS=$(shell tar -tf test_spneumo.tar.xz)
 
-###################
-## Compare trees ##
-###################
-
+##########
+## Main ##
+##########
+all: ## Run all tests
 all: \
 	tree.default.nw \
 	tree.default_verbose_debug.nw \
@@ -23,13 +23,11 @@ all: \
 		diff $$x tree.precomputed.newick; \
 	done
 
+data: ## Regenerate test data
 data: tree.precomputed.newick
 
 
-###################################
-# Different ways to compute trees #
-###################################
-
+# Different ways to compute trees
 tree.default.nw: file_list.txt
 	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py $(shell cat $<) > "$@.tmp"
@@ -58,15 +56,15 @@ tree.file_list_proc_subst.nw: file_list.txt
 tree.precomputed.newick: tree.default.nw
 	cp $< $@
 
-##############
-# Input data #
-##############
-
 file_list.txt: test_spneumo.tar.xz
 	tar xvf $<
 	tar -tf $< > file_list.txt.tmp
 	mv file_list.txt.tmp file_list.txt
 
+
+###############
+## Auxiliary ##
+###############
 help: ## Print help messages
 	@echo -e "$$(grep -hE '^\S*(:.*)?##' $(MAKEFILE_LIST) \
 		| sed \
