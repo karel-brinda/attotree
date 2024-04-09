@@ -26,7 +26,7 @@ DESC = 'rapid estimation of phylogenetic trees using sketching'
 DEFAULT_S = 10000
 DEFAULT_K = 21
 DEFAULT_T = os.cpu_count()
-DEFAULT_F = "nj"
+DEFAULT_M = "nj"
 
 
 def shorten_output(s):
@@ -267,13 +267,13 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fn, verbose):
             buffer.append(x)
     s = "".join(buffer)
     if nw_out_fn == "-":
-        print(s)
+        print(s, end="")
     else:
         with open(nw_out_fn, "w+") as fo:
-            print(s, file=fo)
+            fo.write(s)
 
 
-def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
+def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, tmp_dir, fof, verbose, debug):
     """
     Generate a phylogenetic tree using the given parameters.
 
@@ -284,6 +284,7 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
         s (int): Value for parameter s.
         t (int): Value for parameter t.
         phylogeny_algorithm (str): Name of the phylogeny algorithm to use.
+        tmp_dir (str): Temporary directory.
         fof (bool): Flag indicating whether to use the fof parameter.
         verbose (bool): Flag indicating whether to enable verbose output.
         debug (bool): Flag indicating whether to retain auxiliary files.
@@ -302,7 +303,9 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
         fmsg = ""
     message(f"Attotree starting{fmsg}")
 
-    d = tempfile.mkdtemp()
+    message(str(tmp_dir))
+    d = tempfile.mkdtemp(dir=tmp_dir)
+    message(d)
 
     message('Creating a temporary directory', d)
     phylip1_fn = os.path.join(d, "distances.phylip0")
@@ -311,12 +314,13 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     newick2_fn = newick_fn
     if fof:
         #This is to make the list of file pass to Mash even with
-        #process substitutions
-        old_fof_fn = fns[0]
+        #process substitutions and allows for merging mutliple lists
         new_fof_fn = os.path.join(d, "fof.txt")
-        with open(old_fof_fn) as f, open(new_fof_fn, 'w') as g:
-            g.write(f.read())
-        fns = [new_fof_fn]
+        with open(new_fof_fn, 'w') as g:
+            for old_fof_fn in fns:
+                with open(old_fof_fn) as f:
+                    g.write(f.read().strip() + "\n")
+                fns = [new_fof_fn]
     mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof, verbose=verbose)
     postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
     quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
@@ -408,7 +412,7 @@ def main():
         metavar='INT',
         dest='t',
         default=DEFAULT_T,
-        help=f'number of threads [{DEFAULT_T}]',
+        help=f'number of threads [#cores, {DEFAULT_T}]',
     )
 
     parser.add_argument(
@@ -420,19 +424,27 @@ def main():
     )
 
     parser.add_argument(
-        '-f',
+        '-m',
         metavar='STR',
-        dest='f',
-        default=DEFAULT_F,
+        dest='m',
+        default=DEFAULT_M,
         choices=("nj", "upgma"),
-        help=f'tree inference algorithm (nj/upgma) [{DEFAULT_F}]',
+        help=f'tree construction method (nj/upgma) [{DEFAULT_M}]',
+    )
+
+    parser.add_argument(
+        '-d',
+        metavar='DIR',
+        dest='d',
+        default=None,
+        help=f'tmp dir [default system, {tempfile.gettempdir()[:15]+"..."}]',
     )
 
     parser.add_argument(
         '-L',
         action='store_true',
         dest='L',
-        help=f'input files are list of files',
+        help=f'input files are list(s) of files',
     )
 
     parser.add_argument(
@@ -450,17 +462,17 @@ def main():
     )
 
     parser.add_argument(
-        'genomes',
+        'genome',
         nargs="+",
-        help='input genome file (fasta / gzipped fasta / list of files when "-L")',
+        help='input genome file(s) (fasta / gzipped fasta / list of files when "-L")',
     )
 
     args = parser.parse_args()
 
     #print(args)
     attotree(
-        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.f, fof=args.L,
-        verbose=args.V, debug=args.D
+        fns=args.genome, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.m, fof=args.L,
+        verbose=args.V, debug=args.D, tmp_dir=args.d
     )
 
     args = parser.parse_args()
