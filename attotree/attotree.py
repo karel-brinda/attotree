@@ -267,10 +267,10 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fn, verbose):
             buffer.append(x)
     s = "".join(buffer)
     if nw_out_fn == "-":
-        print(s)
+        print(s, end="")
     else:
         with open(nw_out_fn, "w+") as fo:
-            print(s, file=fo)
+            fo.write(s)
 
 
 def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
