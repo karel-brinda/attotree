@@ -16,7 +16,8 @@ all: \
 	tree.default.nw \
 	tree.default_verbose_debug.nw \
 	tree.file_list.nw \
-	tree.file_list_proc_subst.nw
+	tree.file_list_proc_subst.nw \
+	tree.default_o-param.nw
 	for x in $^; do \
 		2>&1 echo Testing "$$x"; \
 		diff $$x tree.precomputed.newick; \
@@ -30,18 +31,27 @@ data: tree.precomputed.newick
 ###################################
 
 tree.default.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py $(shell cat $<) > "$@.tmp"
 	mv "$@.tmp" "$@"
 
+tree.default_o-param.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
+	../../attotree/attotree.py $(shell cat $<) -o "$@.tmp"
+	mv "$@.tmp" "$@"
+
 tree.default_verbose_debug.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py -V -D $(shell cat $<) > "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.file_list.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py -L "$<"  > "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.file_list_proc_subst.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py -L <(head -n 99999 "$<")  > "$@.tmp"
 	mv "$@.tmp" "$@"
 
