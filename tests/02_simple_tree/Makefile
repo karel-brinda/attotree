@@ -95,6 +95,7 @@ help: ## Print help messages
 
 clean: ## Clean
 	rm -f *.nw *.tmp
+	rm -fr tmp_dir/*
 
 cleanall: clean ## Clean all
 	rm -f file_list.txt *.fa
