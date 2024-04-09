@@ -67,15 +67,15 @@ Command-line parameters
 .. code-block::
 
     $ attotree -h
-
+    
     Program: attotree (rapid estimation of phylogenetic trees using sketching)
     Version: 0.1.6
     Author:  Karel Brinda <karel.brinda@inria.fr>
 
-    usage: attotree [-k INT] [-s INT] [-t INT] [-o FILE] [-a STR] [-d DIR] [-L] [-D] [-V] genomes [genomes ...]
+    usage: attotree [-k INT] [-s INT] [-t INT] [-o FILE] [-m STR] [-d DIR] [-L] [-D] [-V] genome [genome ...]
 
     positional arguments:
-      genomes     input genome file (fasta / gzipped fasta / list of files when "-L")
+      genome      input genome file(s) (fasta / gzipped fasta / list of files when "-L")
 
     options:
       -h          show this help message and exit
@@ -84,7 +84,7 @@ Command-line parameters
       -s INT      sketch size [10000]
       -t INT      number of threads [#cores, 10]
       -o FILE     newick output [-]
-      -a STR      tree inference algorithm (nj/upgma) [nj]
+      -m STR      tree construction method (nj/upgma) [nj]
       -d DIR      tmp dir [default system, /var/folders/z6...]
       -L          input files are list of files
       -D          debugging (don't remove tmp dir)

@@ -43,7 +43,7 @@ tree.default.nw: file_list.txt
 
 tree.default_upgma.nw: file_list.txt
 	@ >&2 printf "=====\\n$@\\n=====\\n"
-	../../attotree/attotree.py $(shell cat $<) -a upgma> "$@.tmp"
+	../../attotree/attotree.py $(shell cat $<) -m upgma> "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.default_local_tmp_dir.nw: file_list.txt

@@ -26,7 +26,7 @@ DESC = 'rapid estimation of phylogenetic trees using sketching'
 DEFAULT_S = 10000
 DEFAULT_K = 21
 DEFAULT_T = os.cpu_count()
-DEFAULT_A = "nj"
+DEFAULT_M = "nj"
 
 
 def shorten_output(s):
@@ -423,12 +423,12 @@ def main():
     )
 
     parser.add_argument(
-        '-a',
+        '-m',
         metavar='STR',
-        dest='a',
-        default=DEFAULT_A,
+        dest='m',
+        default=DEFAULT_M,
         choices=("nj", "upgma"),
-        help=f'tree inference algorithm (nj/upgma) [{DEFAULT_A}]',
+        help=f'tree construction method (nj/upgma) [{DEFAULT_M}]',
     )
 
     parser.add_argument(
@@ -461,16 +461,16 @@ def main():
     )
 
     parser.add_argument(
-        'genomes',
+        'genome',
         nargs="+",
-        help='input genome file (fasta / gzipped fasta / list of files when "-L")',
+        help='input genome file(s) (fasta / gzipped fasta / list of files when "-L")',
     )
 
     args = parser.parse_args()
 
     #print(args)
     attotree(
-        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.a, fof=args.L,
+        fns=args.genome, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.m, fof=args.L,
         verbose=args.V, debug=args.D, tmp_dir=args.d
     )
 
