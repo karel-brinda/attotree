@@ -295,7 +295,7 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     if verbose:
         features.append("verbose")
     if debug:
-        features.append("debuging")
+        features.append("debugging")
     if len(features) > 0:
         fmsg = f" ({', '.join(features)})"
     else:
