@@ -2,4 +2,4 @@ try:
     from __commit import *
 except ImportError:
     pass
-VERSION = "0.1.5"
+VERSION = "0.1.6"
