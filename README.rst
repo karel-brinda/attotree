@@ -1,14 +1,18 @@
 Attotree
 ========
 
+.. |info-badge| image:: https://img.shields.io/badge/Project-Info-blue
+    :target: https://github.com/karel-brinda/attotree
 .. |github-release-badge| image:: https://img.shields.io/github/release/karel-brinda/attotree.svg
     :target: https://github.com/karel-brinda/attotree/releases/
+.. |pypi-badge| image:: https://img.shields.io/pypi/v/attotree.svg
+    :target: https://pypi.org/project/attotree/
 .. |doi-badge| image:: https://zenodo.org/badge/DOI/110.5281/zenodo.10945896.svg
     :target: https://doi.org/10.5281/zenodo.10945896
 .. |ci-tests-badge| image:: https://github.com/karel-brinda/attotree/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/karel-brinda/attotree/actions/
 
-|info-badge| |paper-badge| |github-release-badge| |doi-badge| |ci-tests-badge|
+|info-badge| |github-release-badge| |pypi-badge| |doi-badge| |ci-tests-badge|
 
 
 Introduction
