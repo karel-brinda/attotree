@@ -5,7 +5,7 @@ Attotree
     :target: https://github.com/karel-brinda/attotree/releases/
 .. |doi-badge| image:: https://zenodo.org/badge/DOI/110.5281/zenodo.10945896.svg
     :target: https://doi.org/10.5281/zenodo.10945896
-.. |ci-tests-badge| image:: https://github.com/karel-brinda/attotree/actions/workflows/ci.yaml/badge.svg
+.. |ci-tests-badge| image:: https://github.com/karel-brinda/attotree/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/karel-brinda/attotree/actions/
 
 |info-badge| |paper-badge| |github-release-badge| |doi-badge| |ci-tests-badge|
