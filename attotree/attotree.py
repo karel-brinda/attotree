@@ -10,6 +10,7 @@ import argparse
 import datetime
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -230,7 +231,7 @@ def quicktree(phylip_fn, newick_fn, algorithm, verbose):
     Returns:
         None
     """
-    message("Running quicktree")
+    message("Running Quicktree")
 
     cmd = "quicktree -in m".split()
     if algorithm == "upgma":
@@ -295,28 +296,32 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     else:
         fmsg = ""
     message(f"Attotree starting{fmsg}")
-    with tempfile.TemporaryDirectory(delete=not debug) as d:
-        message('Created a temporary directory', d)
-        phylip1_fn = os.path.join(d, "distances.phylip0")
-        phylip2_fn = os.path.join(d, "distances.phylip")
-        newick1_fn = os.path.join(d, "tree.nw")
-        newick2_fo = newick_fo
-        if fof:
-            #This is to make the list of file pass to Mash even with
-            #process substitutions
-            old_fof_fn = fns[0]
-            new_fof_fn = os.path.join(d, "fof.txt")
-            with open(old_fof_fn) as f, open(new_fof_fn, 'w') as g:
-                g.write(f.read())
-            fns = [new_fof_fn]
-        mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof, verbose=verbose)
-        postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
-        quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
-        postprocess_quicktree_nw(newick1_fn, newick2_fo, verbose=verbose)
+
+    d = tempfile.mkdtemp()
+
+    message('Creating a temporary directory', d)
+    phylip1_fn = os.path.join(d, "distances.phylip0")
+    phylip2_fn = os.path.join(d, "distances.phylip")
+    newick1_fn = os.path.join(d, "tree.nw")
+    newick2_fo = newick_fo
+    if fof:
+        #This is to make the list of file pass to Mash even with
+        #process substitutions
+        old_fof_fn = fns[0]
+        new_fof_fn = os.path.join(d, "fof.txt")
+        with open(old_fof_fn) as f, open(new_fof_fn, 'w') as g:
+            g.write(f.read())
+        fns = [new_fof_fn]
+    mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof, verbose=verbose)
+    postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
+    quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
+    postprocess_quicktree_nw(newick1_fn, newick2_fo, verbose=verbose)
 
     if debug:
         emsg = f" (auxiliary files retained in '{d}')"
     else:
+        shutil.rmtree(d)
+        message('Deleting the temporary directory', d)
         emsg = ""
     message(f"Attotree finished{emsg}")
 
