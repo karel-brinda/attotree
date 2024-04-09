@@ -240,7 +240,7 @@ def quicktree(phylip_fn, newick_fn, algorithm, verbose):
     run_safe(cmd, output_fn=newick_fn, verbose=verbose)
 
 
-def postprocess_quicktree_nw(nw_in_fn, nw_out_fo, verbose):
+def postprocess_quicktree_nw(nw_in_fn, nw_out_fn, verbose):
     """
     Reformat newick.
 
@@ -253,7 +253,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo, verbose):
 
     Args:
         nw_in_fn (str): Path to the input newick file.
-        nw_out_fo (file object): File object to write the postprocessed newick file.
+        nw_out_fn (str): Path for the output postprocessed newick file.
         verbose (bool): If True, print additional information during the postprocessing.
 
     Returns:
@@ -265,16 +265,21 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fo, verbose):
         for x in fo:
             x = x.strip()
             buffer.append(x)
-    print("".join(buffer), file=nw_out_fo)
+    s = "".join(buffer)
+    if nw_out_fn == "-":
+        print(s)
+    else:
+        with open(nw_out_fn, "w+") as fo:
+            print(s, file=fo)
 
 
-def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
+def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     """
     Generate a phylogenetic tree using the given parameters.
 
     Args:
         fns (list): List of input filenames.
-        newick_fo (file object): Output file object to write the generated tree.
+        newick_fn (file name): Filename for the generated tree.
         k (int): Value for parameter k.
         s (int): Value for parameter s.
         t (int): Value for parameter t.
@@ -303,7 +308,7 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     phylip1_fn = os.path.join(d, "distances.phylip0")
     phylip2_fn = os.path.join(d, "distances.phylip")
     newick1_fn = os.path.join(d, "tree.nw")
-    newick2_fo = newick_fo
+    newick2_fn = newick_fn
     if fof:
         #This is to make the list of file pass to Mash even with
         #process substitutions
@@ -315,7 +320,7 @@ def attotree(fns, newick_fo, k, s, t, phylogeny_algorithm, fof, verbose, debug):
     mash_triangle(fns, phylip1_fn, k=k, s=s, t=t, fof=fof, verbose=verbose)
     postprocess_mash_phylip(phylip1_fn, phylip2_fn, verbose=verbose)
     quicktree(phylip2_fn, newick1_fn, algorithm=phylogeny_algorithm, verbose=verbose)
-    postprocess_quicktree_nw(newick1_fn, newick2_fo, verbose=verbose)
+    postprocess_quicktree_nw(newick1_fn, newick2_fn, verbose=verbose)
 
     if debug:
         emsg = f" (auxiliary files retained in '{d}')"
@@ -410,9 +415,8 @@ def main():
         '-o',
         metavar='FILE',
         dest='o',
-        type=argparse.FileType('w'),
-        default=sys.stdout,
-        help=f'newick output [stdout]',
+        default="-",
+        help=f'newick output [-]',
     )
 
     parser.add_argument(
@@ -455,7 +459,7 @@ def main():
 
     #print(args)
     attotree(
-        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fo=args.o, phylogeny_algorithm=args.f, fof=args.L,
+        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.f, fof=args.L,
         verbose=args.V, debug=args.D
     )
 
