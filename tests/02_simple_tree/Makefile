@@ -1,4 +1,4 @@
-.PHONY: all help clean cleanall view
+.PHONY: all help clean cleanall view data
 
 SHELL=/usr/bin/env bash -eo pipefail
 
@@ -13,7 +13,6 @@ FASTAS=$(shell tar -tf test_spneumo.tar.xz)
 ###################
 
 all: \
-	tree.precomputed.newick \
 	tree.default.nw \
 	tree.default_verbose_debug.nw \
 	tree.file_list.nw \
@@ -22,6 +21,9 @@ all: \
 		2>&1 echo Testing "$$x"; \
 		diff $$x tree.precomputed.newick; \
 	done
+
+data: tree.precomputed.newick
+
 
 ###################################
 # Different ways to compute trees #
