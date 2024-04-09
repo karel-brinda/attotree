@@ -26,7 +26,7 @@ DESC = 'rapid estimation of phylogenetic trees using sketching'
 DEFAULT_S = 10000
 DEFAULT_K = 21
 DEFAULT_T = os.cpu_count()
-DEFAULT_F = "nj"
+DEFAULT_A = "nj"
 
 
 def shorten_output(s):
@@ -273,7 +273,7 @@ def postprocess_quicktree_nw(nw_in_fn, nw_out_fn, verbose):
             fo.write(s)
 
 
-def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
+def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, tmp_dir, fof, verbose, debug):
     """
     Generate a phylogenetic tree using the given parameters.
 
@@ -284,6 +284,7 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
         s (int): Value for parameter s.
         t (int): Value for parameter t.
         phylogeny_algorithm (str): Name of the phylogeny algorithm to use.
+        tmp_dir (str): Temporary directory.
         fof (bool): Flag indicating whether to use the fof parameter.
         verbose (bool): Flag indicating whether to enable verbose output.
         debug (bool): Flag indicating whether to retain auxiliary files.
@@ -302,7 +303,9 @@ def attotree(fns, newick_fn, k, s, t, phylogeny_algorithm, fof, verbose, debug):
         fmsg = ""
     message(f"Attotree starting{fmsg}")
 
-    d = tempfile.mkdtemp()
+    message(str(tmp_dir))
+    d = tempfile.mkdtemp(dir=tmp_dir)
+    message(d)
 
     message('Creating a temporary directory', d)
     phylip1_fn = os.path.join(d, "distances.phylip0")
@@ -408,7 +411,7 @@ def main():
         metavar='INT',
         dest='t',
         default=DEFAULT_T,
-        help=f'number of threads [{DEFAULT_T}]',
+        help=f'number of threads [#cores, {DEFAULT_T}]',
     )
 
     parser.add_argument(
@@ -420,12 +423,20 @@ def main():
     )
 
     parser.add_argument(
-        '-f',
+        '-a',
         metavar='STR',
-        dest='f',
-        default=DEFAULT_F,
+        dest='a',
+        default=DEFAULT_A,
         choices=("nj", "upgma"),
-        help=f'tree inference algorithm (nj/upgma) [{DEFAULT_F}]',
+        help=f'tree inference algorithm (nj/upgma) [{DEFAULT_A}]',
+    )
+
+    parser.add_argument(
+        '-d',
+        metavar='DIR',
+        dest='d',
+        default=None,
+        help=f'tmp dir [default system, {tempfile.gettempdir()[:15]+"..."}]',
     )
 
     parser.add_argument(
@@ -459,8 +470,8 @@ def main():
 
     #print(args)
     attotree(
-        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.f, fof=args.L,
-        verbose=args.V, debug=args.D
+        fns=args.genomes, k=args.k, s=args.s, t=args.t, newick_fn=args.o, phylogeny_algorithm=args.a, fof=args.L,
+        verbose=args.V, debug=args.D, tmp_dir=args.d
     )
 
     args = parser.parse_args()

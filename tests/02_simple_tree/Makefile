@@ -14,6 +14,7 @@ FASTAS=$(shell tar -tf test_spneumo.tar.xz)
 all: ## Run all tests
 all: \
 	tree.default.nw \
+	tree.default_local_tmp_dir.nw \
 	tree.default_verbose_debug.nw \
 	tree.file_list.nw \
 	tree.file_list_proc_subst.nw \
@@ -31,6 +32,11 @@ data: tree.precomputed.newick file_list.txt
 tree.default.nw: file_list.txt
 	@ >&2 printf "=====\\n$@\\n=====\\n"
 	../../attotree/attotree.py $(shell cat $<) > "$@.tmp"
+	mv "$@.tmp" "$@"
+
+tree.default_local_tmp_dir.nw: file_list.txt
+	@ >&2 printf "=====\\n$@\\n=====\\n"
+	../../attotree/attotree.py $(shell cat $<) -D -d tmp_dir > "$@.tmp"
 	mv "$@.tmp" "$@"
 
 tree.default_o-param.nw: file_list.txt
