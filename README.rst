@@ -7,12 +7,14 @@ Attotree
     :target: https://github.com/karel-brinda/attotree/releases/
 .. |pypi-badge| image:: https://img.shields.io/pypi/v/attotree.svg
     :target: https://pypi.org/project/attotree/
-.. |doi-badge| image:: https://zenodo.org/badge/DOI/110.5281/zenodo.10945896.svg
+.. |bioconda-badge| image:: https://anaconda.org/bioconda/attotree/badges/version.svg
+    :target: https://bioconda.github.io/recipes/attotree/README.html
+.. |zenodo-badge| image:: https://zenodo.org/badge/DOI/110.5281/zenodo.10945896.svg
     :target: https://doi.org/10.5281/zenodo.10945896
 .. |ci-tests-badge| image:: https://github.com/karel-brinda/attotree/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/karel-brinda/attotree/actions/
 
-|info-badge| |github-release-badge| |pypi-badge| |doi-badge| |ci-tests-badge|
+|info-badge| |github-release-badge| |pypi-badge| |bioconda-badge| |zenodo-badge| |ci-tests-badge|
 
 
 Introduction
@@ -67,7 +69,7 @@ Command-line parameters
 .. code-block::
 
     $ attotree -h
-    
+
     Program: attotree (rapid estimation of phylogenetic trees using sketching)
     Version: 0.1.6
     Author:  Karel Brinda <karel.brinda@inria.fr>
