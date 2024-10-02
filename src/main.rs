@@ -1,10 +1,10 @@
-use clap::{Parser, ArgAction};
 use chrono::Local;
+use clap::{ArgAction, Parser};
+use std::ffi::OsStr;
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufRead, BufReader, Write, BufWriter};
+use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::ffi::OsStr;
 use tempfile::{Builder, TempDir};
 
 #[derive(Parser, Debug)]
@@ -59,7 +59,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let genomes: Vec<_> = args.genome.iter().map(|s| s.as_str()).collect();
+    let genomes = &args.genome;
 
     let k = args.k;
     let s = args.s;
@@ -78,18 +78,7 @@ fn main() {
 
     let V = args.V;
 
-    attotree(
-        &genomes,
-        o,
-        k,
-        s,
-        t,
-        m,
-        d,
-        L,
-        V,
-        D,
-    );
+    attotree(genomes, o, k, s, t, m, d, L, V, D);
 }
 
 fn error(msg: &str) {
@@ -167,7 +156,7 @@ fn run_safe(
 }
 
 fn mash_triangle(
-    inp_fns: &[&str],
+    inp_fns: &[String],
     phylip_fn: &Path,
     k: u32,
     s: u32,
@@ -189,16 +178,9 @@ fn mash_triangle(
     if fof {
         cmd.push("-l".to_string());
     }
-    cmd.extend(inp_fns.iter().map(|s| s.to_string()));
+    cmd.extend(inp_fns.iter().cloned());
     let cmd_str = cmd.join(" ");
-    run_safe(
-        &[&cmd_str],
-        Some(phylip_fn),
-        verbose,
-        false,
-        None,
-        true,
-    );
+    run_safe(&[&cmd_str], Some(phylip_fn), verbose, false, None, true);
 }
 
 fn fn_to_node_name(filename: &str) -> String {
@@ -236,24 +218,13 @@ fn postprocess_mash_phylip(phylip_in_fn: &Path, phylip_out_fn: &Path, _verbose: 
 
 fn quicktree(phylip_fn: &Path, newick_fn: &Path, algorithm: &str, verbose: bool) {
     message("Running Quicktree");
-    let mut cmd: Vec<String> = vec![
-        "quicktree".to_string(),
-        "-in".to_string(),
-        "m".to_string(),
-    ];
+    let mut cmd: Vec<String> = vec!["quicktree".to_string(), "-in".to_string(), "m".to_string()];
     if algorithm == "upgma" {
         cmd.push("-upgma".to_string());
     }
     cmd.push(phylip_fn.to_str().unwrap().to_string());
     let cmd_str = cmd.join(" ");
-    run_safe(
-        &[&cmd_str],
-        Some(newick_fn),
-        verbose,
-        false,
-        None,
-        true,
-    );
+    run_safe(&[&cmd_str], Some(newick_fn), verbose, false, None, true);
 }
 
 fn postprocess_quicktree_nw(nw_in_fn: &Path, nw_out_fn: &Path, _verbose: bool) {
@@ -273,9 +244,8 @@ fn postprocess_quicktree_nw(nw_in_fn: &Path, nw_out_fn: &Path, _verbose: bool) {
             .expect("Failed to write newick output");
     }
 }
-
 fn attotree(
-    fns: &[&str],
+    fns: &[String],
     newick_fn: &str,
     k: u32,
     s: u32,
@@ -319,9 +289,7 @@ fn attotree(
     let newick1_fn = d.join("tree.nw");
     let newick2_fn = PathBuf::from(newick_fn);
 
-    let fns = if fof {
-        // This is to make the list of files passed to Mash even with
-        // process substitutions and allows for merging multiple lists
+    let fns: Vec<String> = if fof {
         let new_fof_fn = d.join("fof.txt");
         {
             let mut g = File::create(&new_fof_fn).expect("Failed to create new fof file");
@@ -334,9 +302,9 @@ fn attotree(
                 }
             }
         }
-        vec![new_fof_fn.to_str().unwrap()]
+        vec![new_fof_fn.to_string_lossy().into_owned()]
     } else {
-        fns.to_vec()
+        fns.iter().cloned().collect()
     };
 
     mash_triangle(&fns, &phylip1_fn, k, s, t, fof, verbose);
@@ -348,10 +316,7 @@ fn attotree(
         let temp_dir_path = temp_dir.into_path();
         format!(" (auxiliary files retained in '{:?}')", temp_dir_path)
     } else {
-        message(&format!(
-            "Deleting the temporary directory {:?}",
-            d
-        ));
+        message(&format!("Deleting the temporary directory {:?}", d));
         // TempDir is dropped here, and the directory is deleted
         String::new()
     };
