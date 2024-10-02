@@ -1,0 +1,11 @@
+[package]
+name = "attotree"
+version = "0.1.0"
+authors = ["Karel Brinda <karel.brinda@inria.fr>"]
+edition = "2021"
+
+[dependencies]
+clap = { version = "4.1.14", features = ["derive"] }
+num_cpus = "1.13.0"
+chrono = "0.4"
+tempfile = "3.3"
