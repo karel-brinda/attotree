@@ -48,8 +48,8 @@ struct Args {
     D: bool,
 
     /// verbose output
-    #[arg(short = 'V', action = ArgAction::SetTrue)]
-    V: bool,
+    #[arg(short = 'v', action = ArgAction::SetTrue)]
+    v: bool,
 
     /// input genome file(s) (fasta / gzipped fasta / list of files when '-L')
     #[arg(required = true)]
@@ -76,9 +76,9 @@ fn main() {
 
     let D = args.D;
 
-    let V = args.V;
+    let v = args.v;
 
-    attotree(genomes, o, k, s, t, m, d, L, V, D);
+    attotree(genomes, o, k, s, t, m, d, L, v, D);
 }
 
 fn error(msg: &str) {
