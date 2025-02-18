@@ -17,6 +17,8 @@ ROOT_DIR = $(shell pwd)
 ###############
 
 all:
+	cargo build
+	cargo build --release
 
 help: ## Print help messages
 	@echo -e "$$(grep -hE '^\S*(:.*)?##' $(MAKEFILE_LIST) \
