@@ -61,7 +61,7 @@ static struct Option options[] = {
 static unsigned int use_kimura = 0;
 static unsigned int calc_bootstraps = 0;
 static unsigned int use_upgma = 0;
-static unsigned int input_is_matrix = 0;
+static unsigned int input_is_matrix = 1;
 static unsigned int output_is_matrix = 0;
 
 
