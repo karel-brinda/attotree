@@ -58,14 +58,14 @@ static struct Option options[] = {
     { "-v",      NO_ARGS },
 };
 
-static unsigned int use_kimura = 0; 
+static unsigned int use_kimura = 0;
 static unsigned int calc_bootstraps = 0;
 static unsigned int use_upgma = 0;
 static unsigned int input_is_matrix = 0;
 static unsigned int output_is_matrix = 0;
 
 
-static void quicktree( FILE *input) {
+void quicktree( FILE *input) {
   unsigned int trial;
   struct Alignment *aln, *cons_aln = NULL;
   struct DistanceMatrix *mat;
@@ -83,8 +83,8 @@ static void quicktree( FILE *input) {
     fclose( input );
 
     /* Note that the alignment here contains no sequences, just names,
-       so there is no point in trying to merge identical sequences, hence 
-       the FALSE argument 
+       so there is no point in trying to merge identical sequences, hence
+       the FALSE argument
 
     */
 
@@ -98,7 +98,7 @@ static void quicktree( FILE *input) {
     if ( ( aln = read_Stockholm_Alignment( input )) == NULL)
       fatal_util( "Parse error in alignment file: Must be in MUL format");
     fclose( input );
-    
+
     if (output_is_matrix) {
       mat = empty_DistanceMatrix( aln->numseqs );
       calc_DistanceMatrix( mat, aln, FALSE, use_kimura );
@@ -118,20 +118,20 @@ static void quicktree( FILE *input) {
   /* step 2 produce tree */
 
   tree_func = use_upgma ? &UPGMA_buildtree : &neighbour_joining_buildtree;
-  
-  myTree = (*tree_func)( group, calc_bootstraps ); 
-  
+
+  myTree = (*tree_func)( group, calc_bootstraps );
+
   if (calc_bootstraps) {
     for (trial=0; trial < calc_bootstraps; trial++) {
       calc_DistanceMatrix( group->matrix, cons_aln, TRUE, use_kimura );
-      testTree = (*tree_func)( group, calc_bootstraps ); 
+      testTree = (*tree_func)( group, calc_bootstraps );
       update_bootstraps_Tree( myTree, testTree, group->numclusters );
       testTree = free_Tree( testTree );
     }
     scale_bootstraps_Tree( myTree, calc_bootstraps );
     cons_aln = free_Alignment( cons_aln );
   }
-  
+
   write_newhampshire_Tree( stdout, myTree, calc_bootstraps );
 
   aln = free_Alignment( aln );
@@ -150,17 +150,17 @@ int main (int argc, char *argv[]) {
 
   FILE *input;
   char *fname;
-  
+
   char *optname;                /* name of option found by getoption */
   char *optarg;                 /* argument found by getoption       */
   unsigned int optindex;        /* index in argv[]             */
 
   /**********************************/
-  /** process command line options **/				    
+  /** process command line options **/
   /**********************************/
 
-  while (get_option( argc, 
-		     argv, 
+  while (get_option( argc,
+		     argv,
 		     options,
 		     sizeof(options) / sizeof( struct Option ),
 		     usage,
@@ -173,7 +173,7 @@ int main (int argc, char *argv[]) {
     else if (strcmp(optname, "-in") == 0) {
       if (optarg[0] != 'm' && optarg[0] != 'a')
 	fatal_util("Error: Incorrect use of '-in' optio\n%s\n", usage );
-      
+
       if (optarg[0] == 'm')
 	input_is_matrix = 1;
       else if (optarg[0] == 'a')
@@ -182,13 +182,13 @@ int main (int argc, char *argv[]) {
     else if (strcmp(optname, "-out") == 0) {
       if (optarg[0] != 'm' && optarg[0] != 't')
 	fatal_util("Error: Incorrect use of '-out' option\n%s\n", usage );
-      
+
       if (optarg[0] == 'm')
 	output_is_matrix = 1;
       else if (optarg[0] == 't')
 	output_is_matrix = 0;
 
-    } 
+    }
     else if (strcmp(optname, "-h") == 0) {
       fprintf( stderr, "%s", usage );
       exit(0);

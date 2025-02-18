@@ -11,21 +11,28 @@ COMMON = $(OBJ)/align.o \
 	$(OBJ)/util.o \
 	$(OBJ)/sequence.o
 
-QUICKTREEOBJ = $(COMMON) $(OBJ)/quicktree.o $(OBJ)/buildtree.o $(OBJ)/tree.o
+QUICKTREEOBJ = $(COMMON) $(OBJ)/quicktree.o $(OBJ)/buildtree.o $(OBJ)/tree.o $(OBJ)/quicktree_wrapper.o
 
 
 CC	= gcc
 CFLAGS  = -c -I$(INC) -O2 -Wunused-result
 
-LFLAGS = -g 
+LFLAGS = -g
 
-all: quicktree
+all: quicktree libquicktree.a
+
+libquicktree.a: $(QUICKTREEOBJ)
+	ar rcs libquicktree.a $(QUICKTREEOBJ)
+
 
 quicktree : $(QUICKTREEOBJ)
 	$(CC) $(LFLAGS) -o $@ $(QUICKTREEOBJ) -lm
 
 $(OBJ)/quicktree.o : $(SRC)/quicktree.c $(INC)/version.h
 	$(CC) $(CFLAGS) -o $(OBJ)/quicktree.o $(SRC)/quicktree.c
+
+$(OBJ)/quicktree_wrapper.o : $(SRC)/quicktree.c $(INC)/version.h
+	$(CC) $(CFLAGS) -o $(OBJ)/quicktree_wrapper.o $(SRC)/quicktree_wrapper.c
 
 $(OBJ)/align.o : $(SRC)/align.c $(INC)/align.h
 	$(CC) $(CFLAGS) -o $(OBJ)/align.o $(SRC)/align.c
@@ -52,4 +59,4 @@ $(OBJ)/options.o : $(SRC)/options.c $(INC)/options.h
 	$(CC) $(CFLAGS) -o $(OBJ)/options.o $(SRC)/options.c
 
 clean:
-	rm $(OBJ)/*.o quicktree
+	rm $(OBJ)/*.o quicktree libquicktree.a
