@@ -1,11 +1,29 @@
 use chrono::Local;
 use clap::{ArgAction, Parser};
 use std::ffi::OsStr;
-use std::fs::{File, OpenOptions};
+use std::fs::{File, OpenOptions, };
 use std::io::{self, BufRead, BufReader, BufWriter, Write};
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::os::fd::FromRawFd; // <--- bring the trait in scope
 use tempfile::{Builder, TempDir};
+
+use libc::c_char;
+use nix::errno::Errno;
+use nix::unistd::{close, dup, dup2, pipe, read};
+use std::{ffi::CString, io::Read};
+
+#[link(name = "quicktree")] // name of the library, e.g. libquicktree.a
+extern "C" {
+    fn run_quicktree(input_filename: *const c_char);
+}
+
+pub fn call_quicktree(input_file: &str) {
+    let c_input = CString::new(input_file).expect("CString::new failed");
+    unsafe {
+        run_quicktree(c_input.as_ptr());
+    }
+}
 
 #[derive(Parser, Debug)]
 #[command(
@@ -56,7 +74,52 @@ struct Args {
     genome: Vec<String>,
 }
 
-fn main() {
+/// Capture stdout from run_quicktree
+pub fn call_quicktree_capture(file: &str) -> std::io::Result<String> {
+    // 1) Make a pipe
+    let (reader, writer) = pipe().map_err(|e| {
+        std::io::Error::new(std::io::ErrorKind::Other, format!("pipe() failed: {e}"))
+    })?;
+
+    // 2) Duplicate the current stdout so we can restore it later
+    let saved_stdout = dup(libc::STDOUT_FILENO).map_err(|e| {
+        std::io::Error::new(std::io::ErrorKind::Other, format!("dup() failed: {e}"))
+    })?;
+
+    // 3) Redirect stdout to the pipe's writer
+    dup2(writer, libc::STDOUT_FILENO).map_err(|e| {
+        std::io::Error::new(std::io::ErrorKind::Other, format!("dup2() failed: {e}"))
+    })?;
+
+    // 4) Call the C function. It will print to stdout (our pipe).
+    let c_file = CString::new(file).expect("CString::new failed");
+    unsafe {
+        run_quicktree(c_file.as_ptr());
+    }
+
+    // 5) Close the writer so EOF is seen by the reader
+    close(writer).ok();
+
+    // 6) Restore the old stdout
+    //    (so further prints in Rust go to the real terminal again)
+    dup2(saved_stdout, libc::STDOUT_FILENO).ok();
+    close(saved_stdout).ok();
+
+    // 7) Read everything from the pipe
+    let mut buffer = Vec::new();
+    let mut file_reader = unsafe { std::fs::File::from_raw_fd(reader) };
+    file_reader.read_to_end(&mut buffer)?;
+    // FD `reader` will close automatically when `file_reader` goes out of scope
+
+    // Convert raw bytes to UTF-8 string (if the output is text)
+    Ok(String::from_utf8_lossy(&buffer).to_string())
+}
+
+fn main() -> std::io::Result<()> {
+
+    let captured_output = call_quicktree_capture("distances.phylip")?;
+    println!("Captured text:\n{}", captured_output);
+
     let args = Args::parse();
 
     let genomes = &args.genome;
@@ -79,6 +142,7 @@ fn main() {
     let v = args.v;
 
     attotree(genomes, o, k, s, t, m, d, L, v, D);
+    Ok(())
 }
 
 fn error(msg: &str) {
@@ -244,6 +308,7 @@ fn postprocess_quicktree_nw(nw_in_fn: &Path, nw_out_fn: &Path, _verbose: bool) {
             .expect("Failed to write newick output");
     }
 }
+
 fn attotree(
     fns: &[String],
     newick_fn: &str,
@@ -321,4 +386,7 @@ fn attotree(
         String::new()
     };
     message(&format!("Attotree finished{}", emsg));
+
+    //Ok(())
+
 }
